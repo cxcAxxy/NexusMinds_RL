@@ -21,6 +21,7 @@ class Franka(Robot):
             ee_displacement = action[:,:3]
 
             # limit maxium change in position
+
             ee_displacement = ee_displacement * 0.05  # limit maximum change in position
 
             # 计算对应的des_pos和des_orn

@@ -4,7 +4,7 @@ import argparse
 from typing import Optional, List
 
 # 先导入依赖 isaacgym 的配置与环境，再导入 torch 与 rsl_rl，避免导入顺序问题
-from configs.Robot_config import FrankaReachCfg
+from configs.FrankaReach_config import FrankaReachCfg
 from env.TaskRobotEnv import FrankaReachFixedPointGym
 
 import torch

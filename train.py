@@ -4,12 +4,13 @@ from datetime import datetime
 import sys
 
 # 首先导入包含 Isaac Gym 的配置和环境模块
-from configs.Robot_config import FrankaReachCfg
+from configs.FrankaReach_config import FrankaReachCfg
 from env.TaskRobotEnv import FrankaReachFixedPointGym
+
 
 # 然后导入可能包含 PyTorch 的 rsl_rl 模块
 from rsl_rl.runners import OnPolicyRunner
-from rsl_rl.configs import rslCfgPPO, envCfg
+from rsl_rl.configs import rslCfgPPO
 from rsl_rl.utils import class_to_dict
 
 def train():

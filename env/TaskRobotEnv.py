@@ -35,4 +35,15 @@ class FrankaReachRandPointsGym(RobotTaskEnv):
             cfg)
 
 
+# 需要修改
+class LinkerHandGraspGym(RobotTaskEnv):
+    def __init__(self,cfg) -> None:
+        sim = Gym(cfg.gymcfg)
+        robot = Franka(sim, cfg.robotcfg)
+        task = Reach_fixed_point(sim, cfg.taskcfg)
 
+        # 调用父类初始化，传入机器人、任务和配置
+        super().__init__(
+            robot,
+            task,
+            cfg)
