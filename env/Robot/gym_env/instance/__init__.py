@@ -1,1 +1,1 @@
-from .franka import Franka
+from .linkerhand import LinkerHand06

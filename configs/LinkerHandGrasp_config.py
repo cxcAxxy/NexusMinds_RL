@@ -19,7 +19,7 @@ class GlobalCfg:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # 环境数量
-        self.num_envs = 4096
+        self.num_envs = 4
 
 
 class GymCfg:
@@ -44,14 +44,14 @@ class RobotCfg:
         # 控制相关参数
         self.control_type = "ee"
         self.block_gripper = True
-        self.num_actions = 3
-        self.num_obs = 9
+        self.num_actions = 9
+        self.num_obs = 51
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/cxc/Desktop/NexusMInds_RL/env/assets"
-        self.robot_files = "urdf/linkerhand-06-right-urdf/linkerhand_o6_right.urdf"
+        self.asset = "/home/gu/NexusMInds_RL/env/assets"
+        self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
         self.base_orn = [0, 0, 0, 1]  # 每个环境的机器人姿态
@@ -72,10 +72,18 @@ class TaskCfg:
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
 
         self.reward_type = "dense"
-        self.distance_threshold = 0.05
+        self.distance_threshold = 0.02
 
-        self.goal_range = 1
-        self.get_ee_position = None
+        self.c1 = 1
+        self.c2 = 1
+        self.c3 = 1
+        self.c4 = 1
+        self.c5 = 1
+        self.c6 = 1
+
+        self.alpha_mid =1
+        self.alpha_pos =1
+
 
 
 class AllCfg:
@@ -92,7 +100,7 @@ class AllCfg:
         self.control_type_sim = "effort"
 
 
-class FrankaReachCfg:
+class LinkGraspCfg:
     """总配置类"""
 
     def __init__(self):

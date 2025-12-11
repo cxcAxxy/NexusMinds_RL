@@ -249,10 +249,7 @@ class RobotTaskEnv():
         collision_info = self.robot.check_ee_collision()
         collision_termination = collision_info['collision_occurred']
 
-        task_success = self.task.is_success(
-            self.task.get_achieved_goal(), 
-            self.task.get_goal()
-        )
+        task_success = self.task.is_success()
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
 
@@ -265,7 +262,7 @@ class RobotTaskEnv():
             adds each terms to the episode sums and to the total reward
         """
         self.rew_buf[:] = 0.
-        self.rew_buf=self.compute_reward_task(self.achieved_goal_buf,self.desired_goal_buf)
+        self.rew_buf=self.compute_reward_task()
         # 累计到每回合和
         self.episode_sums += self.rew_buf
 
