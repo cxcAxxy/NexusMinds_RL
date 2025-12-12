@@ -63,11 +63,6 @@ class Gym():
         asset_options.disable_gravity = True
         print("Loading asset '%s' from '%s'" % (urdf_file, asset_root))
         self.robot_asset = self.gym.load_asset(self.sim, asset_root, urdf_file, asset_options)
-        num_dofs = self.gym.get_asset_dof_count(self.robot_asset)
-        print("Number of DOFs:", num_dofs)
-        for i in range(num_dofs):
-            dof_name = self.gym.get_asset_dof_name(self.robot_asset, i)
-            print(i, dof_name)
 
     def create_table_asset(self):
         # 创建模板
@@ -77,9 +72,9 @@ class Gym():
         self.table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
     def create_box_asset(self):
-        box_size = 0.1
+        box_size = 0.05
         asset_options = gymapi.AssetOptions()
-        asset_options.fix_base_link = True
+        asset_options.fix_base_link = False
         self.box_asset = self.gym.create_box(self.sim, box_size, box_size, box_size, asset_options)
 
     def create_ball_asset(self):
@@ -388,12 +383,11 @@ class Gym():
 
     # acotor类型
     def get_hand_joint_pos(self):
-        hand_joints_pos = self.dof_pos[:, 7:13, 0] 
+        hand_joints_pos = self.dof_pos[:, 7:18, 0] 
         return hand_joints_pos
     
     def get_hand_joint_vel(self):
-        hand_joints_vel = self.dof_vel[:, 7:13, 0] 
-        print(hand_joints_vel.shape)
+        hand_joints_vel = self.dof_vel[:, 7:18, 0] 
         return hand_joints_vel
     
     def get_joint_angle(self, joint_index):
@@ -440,7 +434,7 @@ class Gym():
         box_goal_pose = gymapi.Transform()
         x = random.uniform(0.3, 0.7)
         y = random.uniform(-0.1, 0.1)
-        z = 0.3
+        z = 0.125
         box_goal_pose.p = gymapi.Vec3(x, y, z)
         box_goal_pose.r = gymapi.Quat(0, 0, 0, 1)
         return box_goal_pose

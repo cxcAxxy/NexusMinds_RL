@@ -44,7 +44,7 @@ class RobotCfg:
         # 控制相关参数
         self.control_type = "ee"
         self.block_gripper = True
-        self.num_actions = 9
+        self.num_actions = 14
         self.num_obs = 51
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
         self.control_type_sim = "effort"

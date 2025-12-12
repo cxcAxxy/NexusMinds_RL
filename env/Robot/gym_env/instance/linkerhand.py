@@ -22,7 +22,7 @@ class LinkerHand06(Robot):
         action = torch.clamp(action, self.cfg.action_low, self.cfg.action_high)
         if self.cfg.control_type == "ee":
             ee_displacement = action[:, :3]
-            joint_displacement = action[:, 3:9]
+            joint_displacement = action[:, 3:14]
 
 
             # limit maxium change in position
@@ -33,8 +33,6 @@ class LinkerHand06(Robot):
             # 计算对应的des_pos和des_orn
             hand_joint_vel = self.sim.get_hand_joint_vel()
 
-            print("--------------------------------")
-            print(hand_joint_vel.shape)
 
             u2 = self.sim.hand_joint_to_torque(joint_displacement, hand_joint_vel)
 
@@ -62,18 +60,6 @@ class LinkerHand06(Robot):
         middle_point = self.sim.get_fingers_mid_point()
         obj_pos = self.sim.get_obj_position()
         obj_quat = self.sim.get_obj_quaternion()
-
-        print("dof_pos", dof_pos.shape)
-        print("ee_position", ee_position.shape)
-        print("ee_orientation", ee_orientation.shape)
-        print("ee_velocity", ee_velocity.shape)
-        print("ee_angular_velocity", ee_angular_velocity.shape)
-        print("middle_point_to_object_distance", middle_point_to_object_distance.shape)
-        print("middle_point", middle_point.shape)
-        print("obj_pos", obj_pos.shape)
-        print("obj_quat", obj_quat.shape)
-
-
 
 
         observation = torch.cat(
