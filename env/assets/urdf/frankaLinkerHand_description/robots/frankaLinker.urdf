@@ -92,7 +92,7 @@
     <origin rpy="1.57079632679 0 0" xyz="0.0825 0 0"/>
     <parent link="panda_link3"/>
     <child link="panda_link4"/>
-    <axis xyz="0 0 1"/>    
+    <axis xyz="0 0 1"/>
     <dynamics damping="10.0"/>
     <limit effort="87" lower="-3.0718" upper="-0.0698" velocity="2.1750"/>
     <!-- something is weird with this joint limit config
@@ -199,7 +199,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/hand_base_link.STL" />
@@ -213,7 +213,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/hand_base_link.STL" />
@@ -239,7 +239,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_metacarpals_base2.STL" />
@@ -253,7 +253,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_metacarpals_base2.STL" />
@@ -297,7 +297,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_metacarpals.STL" />
@@ -311,7 +311,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_metacarpals.STL" />
@@ -355,7 +355,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_distal.STL" />
@@ -369,7 +369,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/thumb_distal.STL" />
@@ -417,7 +417,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/index_proximal.STL" />
@@ -431,7 +431,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/index_proximal.STL" />
@@ -475,7 +475,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/index_distal.STL" />
@@ -489,7 +489,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/index_distal.STL" />
@@ -537,7 +537,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/middle_proximal.STL" />
@@ -551,7 +551,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/middle_proximal.STL" />
@@ -595,7 +595,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/middle_distal.STL" />
@@ -609,7 +609,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/middle_distal.STL" />
@@ -657,7 +657,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/ring_proximal.STL" />
@@ -671,7 +671,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/ring_proximal.STL" />
@@ -715,7 +715,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/ring_distal.STL" />
@@ -729,7 +729,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/ring_distal.STL" />
@@ -777,7 +777,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/pinky_proximal.STL" />
@@ -791,7 +791,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/pinky_proximal.STL" />
@@ -835,7 +835,7 @@
     <visual>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/pinky_distal.STL" />
@@ -849,7 +849,7 @@
     <collision>
       <origin
         xyz="0 0 0"
-        rpy="0 0 0" />
+        rpy="-1.57079632 0 0" />
       <geometry>
         <mesh
           filename="meshes/pinky_distal.STL" />
@@ -883,5 +883,4 @@
 
 
 </robot>
-
 

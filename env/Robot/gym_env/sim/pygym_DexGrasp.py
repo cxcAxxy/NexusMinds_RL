@@ -97,9 +97,9 @@ class Gym():
         self.robot_dof_props["damping"][:7].fill(0.0)
 
         # set DOF control properties for grippers
-        self.robot_dof_props["driveMode"][7:].fill(gymapi.DOF_MODE_POS)
-        self.robot_dof_props["stiffness"][7:].fill(800.0)
-        self.robot_dof_props["damping"][7:].fill(40.0)
+        self.robot_dof_props["driveMode"][7:].fill(gymapi.DOF_MODE_EFFORT)
+        self.robot_dof_props["stiffness"][7:].fill(0)
+        self.robot_dof_props["damping"][7:].fill(0)
 
 
     def create_envs_and_actors(self,num_envs,base_pos,base_orn):
