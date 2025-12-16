@@ -122,7 +122,7 @@ class RobotTaskEnv():
         self.num_achieved_goal = cfg.all.num_achieved_goal
         self.num_desired_goal = cfg.all.num_desired_goal
         self.max_episode_length=cfg.all.max_episode_length
-        self.max_episode_length_s = cfg.all.max_episode_length
+        self.max_episode_length_s = cfg.all.max_episode_length_s
         # allocate buffers
         self.obs_buf=torch.zeros(self.num_envs,self.num_obs,device=self.device,dtype=torch.float)
         self.achieved_goal_buf=torch.zeros(self.num_envs,self.num_achieved_goal,device=self.device,dtype=torch.float)
@@ -168,10 +168,7 @@ class RobotTaskEnv():
         self.robot.reset_ids(env_ids)
         self.task.reset_ids(env_ids)
 
-        # 重置buffer的变量
-        self.rew_buf[env_ids]=0.
-        self.episode_length_buf[env_ids]=0.
-        self.reset_buf[env_ids]=1.
+
 
         # fill extras
         self.extras["episode"] = {}
@@ -181,6 +178,14 @@ class RobotTaskEnv():
                 self.episode_sums[key][env_ids]) / self.max_episode_length_s
             self.episode_sums[key][env_ids] = 0.
         self.extras["time_outs"] = self.time_out_buf
+
+        print("reset idx里面")
+        print(self.episode_length_buf[env_ids])
+
+        self.rew_buf[env_ids] = 0.
+        self.episode_length_buf[env_ids] = 0.
+        self.reset_buf[env_ids] = 1.
+
 
     def reset(self):
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
@@ -206,12 +211,20 @@ class RobotTaskEnv():
         # 更新的问题！！！！，这个更新放到仿真环境里面，就是robot的接口一定要是完全合适的。
 
         self.post_physics_step()
-        # 这个地方的逻辑有问题
+
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
 
     def post_physics_step(self):
         #更新buf的数值。
+
+
+        # 重置extras
+        self.extras = {}
+
         self.episode_length_buf += 1
+        print("-------------")
+        print(self.episode_length_buf)
+
         self.check_termination()
 
         # 顺序上的问题,注意一下
@@ -239,9 +252,16 @@ class RobotTaskEnv():
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
 
+
         # 碰撞逻辑，后面修改
         # self.reset_buf = self.time_out_buf | collision_termination | task_success
         self.reset_buf = self.time_out_buf |  task_success
+
+        # test增加
+        if torch.any(self.reset_buf):
+            reset_ids = torch.nonzero(self.reset_buf).squeeze(-1)
+            print(self.episode_length_buf[reset_ids])
+            print(f"[Reset] env ids: {reset_ids.tolist()}")
 
     
     def compute_reward(self):

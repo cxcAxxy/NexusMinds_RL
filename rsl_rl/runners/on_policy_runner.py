@@ -115,7 +115,11 @@ class OnPolicyRunner:
                     if self.log_dir is not None:
                         # Book keeping
                         if 'episode' in infos:
+
+                            print(infos)
                             ep_infos.append(infos['episode'])#记录回合信息
+
+
                         cur_reward_sum += rewards#累计当前回合奖励
                         cur_episode_length += 1#累计当前回合长度
                         new_ids = (dones > 0).nonzero(as_tuple=False)#找出哪些环境在本步结束了回合

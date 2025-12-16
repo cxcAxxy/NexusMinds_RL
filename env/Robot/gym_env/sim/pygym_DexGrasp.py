@@ -311,7 +311,6 @@ class Gym():
         dpose = torch.cat([pos_err, orn_err], -1)
 
         u = torch.transpose(j_eef_arm, 1, 2) @ m_eef @ (kp * dpose).unsqueeze(-1) - kv * mm_arm @ dof_vel_arm
-
         return  u
     
     def hand_joint_to_torque(self, joint_displacement, hand_joint_vel):
@@ -452,7 +451,6 @@ class Gym():
         plane_params = gymapi.PlaneParams()
         plane_params.normal = gymapi.Vec3(0, 0, 1)
         self.gym.add_ground(self.sim, plane_params)
-
 
 
     def reset_joint_states(self, env_ids):

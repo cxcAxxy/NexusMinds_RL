@@ -10,7 +10,6 @@ args = gymutil.parse_arguments(
     ]
 )
 
-
 class GlobalCfg:
     """全局共享配置 - 统一管理所有组件的共同参数"""
 
@@ -20,7 +19,6 @@ class GlobalCfg:
 
         # 环境数量
         self.num_envs = 4
-
 
 class GymCfg:
     """仿真器配置"""
@@ -85,12 +83,12 @@ class TaskCfg:
         self.alpha_mid =1
         self.alpha_pos =1
 
-
         # 改为字典的方式：
         self.reward_scales = {
             "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
             "grasp_mid_point" : self.c1 * self.c4 * self.c6,
-            "pos_reach_distance" : self.c2
+            "pos_reach_distance" : self.c2 ,
+            "test" : 1
         }
 
 
