@@ -50,7 +50,7 @@ class RobotCfg:
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/gu/NexusMInds_RL/env/assets"
+        self.asset = "/home/cxc/Desktop/NexusMInds_RL/env/assets"
         self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
@@ -74,6 +74,7 @@ class TaskCfg:
         self.reward_type = "dense"
         self.distance_threshold = 0.02
 
+        # 定义所有的参数，后续根据那公式划分一下公式
         self.c1 = 1
         self.c2 = 1
         self.c3 = 1
@@ -84,6 +85,13 @@ class TaskCfg:
         self.alpha_mid =1
         self.alpha_pos =1
 
+
+        # 改为字典的方式：
+        self.reward_scales = {
+            "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
+            "grasp_mid_point" : self.c1 * self.c4 * self.c6,
+            "pos_reach_distance" : self.c2
+        }
 
 
 class AllCfg:

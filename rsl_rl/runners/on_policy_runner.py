@@ -103,7 +103,9 @@ class OnPolicyRunner:
             start = time.time()
             # Rollout
             with torch.inference_mode():#不进行梯度计算
+
                 for i in range(self.num_steps_per_env):#在每个环境的中采集指定步数的数据
+
                     actions = self.alg.act(obs, critic_obs)#选择动作
                     obs, privileged_obs, rewards, dones, infos = self.env.step(actions)#获得执行动作后的环境反馈
                     critic_obs = privileged_obs if privileged_obs is not None else obs#选择critic的观测值
@@ -117,8 +119,10 @@ class OnPolicyRunner:
                         cur_reward_sum += rewards#累计当前回合奖励
                         cur_episode_length += 1#累计当前回合长度
                         new_ids = (dones > 0).nonzero(as_tuple=False)#找出哪些环境在本步结束了回合
+
                         rewbuffer.extend(cur_reward_sum[new_ids][:, 0].cpu().numpy().tolist())#记录结束回合的奖励
                         lenbuffer.extend(cur_episode_length[new_ids][:, 0].cpu().numpy().tolist())#记录结束回合的长度
+
                         cur_reward_sum[new_ids] = 0#重置结束回合的奖励和
                         cur_episode_length[new_ids] = 0#重置结束回合的长度
 

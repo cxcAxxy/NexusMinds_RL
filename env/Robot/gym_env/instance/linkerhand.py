@@ -24,7 +24,6 @@ class LinkerHand06(Robot):
             ee_displacement = action[:, :3]
             joint_displacement = action[:, 3:14]
 
-
             # limit maxium change in position
 
             ee_displacement = ee_displacement * 0.05  # limit maximum change in position
@@ -32,7 +31,6 @@ class LinkerHand06(Robot):
 
             # 计算对应的des_pos和des_orn
             hand_joint_vel = self.sim.get_hand_joint_vel()
-
 
             u2 = self.sim.hand_joint_to_torque(joint_displacement, hand_joint_vel)
 

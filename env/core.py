@@ -89,14 +89,6 @@ class Task(ABC):
     ) -> torch.Tensor:
         """Returns whether the achieved goal match the desired goal."""
 
-    @abstractmethod
-    def compute_reward(
-        self,
-        achieved_goal: torch.Tensor,
-        desired_goal: torch.Tensor,
-    ) -> torch.Tensor:
-        """Compute reward associated to the achieved and the desired goal."""
-
 
 class RobotTaskEnv():
 
@@ -115,6 +107,11 @@ class RobotTaskEnv():
         self.robot = robot
         self.task = task
         self.cfg = cfg  # 保存配置对象
+
+        # self.sim_params.dt = 1.0 / 60.0
+        self.dt = 1 / 60 # 这个地方还是要同步的
+
+
         # 优先使用模拟器的device，保持与Isaac Gym张量一致
         self.device = getattr(self.sim, 'device', cfg.all.device)
         self.num_envs=cfg.all.num_envs
@@ -124,10 +121,8 @@ class RobotTaskEnv():
         self.num_privileged_obs=None    # 后续更新
         self.num_achieved_goal = cfg.all.num_achieved_goal
         self.num_desired_goal = cfg.all.num_desired_goal
-
-
         self.max_episode_length=cfg.all.max_episode_length
-
+        self.max_episode_length_s = cfg.all.max_episode_length
         # allocate buffers
         self.obs_buf=torch.zeros(self.num_envs,self.num_obs,device=self.device,dtype=torch.float)
         self.achieved_goal_buf=torch.zeros(self.num_envs,self.num_achieved_goal,device=self.device,dtype=torch.float)
@@ -143,10 +138,13 @@ class RobotTaskEnv():
             self.privileged_obs_buf = None
             # self.num_privileged_obs = self.num_obs
 
-        self.compute_reward_task=task.compute_reward
         self.extras = {}
         # 新增：按环境累计每回合奖励
         self.episode_sums = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.reward_scales = cfg.taskcfg.reward_scales
+        # log日志奖励函数等
+        self._prepare_reward_function()
+
 
     def get_observations(self):
         """Get current observations for RSL-RL compatibility"""
@@ -170,22 +168,19 @@ class RobotTaskEnv():
         self.robot.reset_ids(env_ids)
         self.task.reset_ids(env_ids)
 
-        # 在清零前，先把本回合的累计奖励写入日志信息
-        self.extras["episode"] = {}
-        self.extras["episode"]["goal_reward"] = torch.mean(self.episode_sums[env_ids]) / self.cfg.all.max_episode_length_s
-
-        self.extras["time_outs"]=self.time_out_buf
-
         # 重置buffer的变量
         self.rew_buf[env_ids]=0.
         self.episode_length_buf[env_ids]=0.
         self.reset_buf[env_ids]=1.
 
-        # 清空该回合累计
-        self.episode_sums[env_ids] = 0.
-
-        # send timeout info to the algorithm
-
+        # fill extras
+        self.extras["episode"] = {}
+        # 清空该回合累计 统计对应的信息
+        for key in self.episode_sums.keys():
+            self.extras["episode"]['rew_' + key] = torch.mean(
+                self.episode_sums[key][env_ids]) / self.max_episode_length_s
+            self.episode_sums[key][env_ids] = 0.
+        self.extras["time_outs"] = self.time_out_buf
 
     def reset(self):
         self.reset_idx(torch.arange(self.num_envs, device=self.device))
@@ -209,13 +204,9 @@ class RobotTaskEnv():
             self.sim.step(action_sim, self.cfg.all.control_type_sim)
 
         # 更新的问题！！！！，这个更新放到仿真环境里面，就是robot的接口一定要是完全合适的。
-  
 
         self.post_physics_step()
-
-
         # 这个地方的逻辑有问题
-
         return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
 
     def post_physics_step(self):
@@ -236,25 +227,22 @@ class RobotTaskEnv():
     def check_termination(self):
         """ Check if environments need to be reset
         """
-        #self.reset_buf = torch.any(torch.norm(self.contact_forces[:, self.termination_contact_indices, :], dim=-1) > 1., dim=1)
-        #self.reset_buf |= torch.logical_or(torch.abs(self.rpy[:,1])>1.0, torch.abs(self.rpy[:,0])>0.8)
-        # 这个地方的仿真接口，就是 reset_buf的判断条件.
-
-        #这个地方也不进行一个更新，判断条件后面再说，根据任务后续设定
 
         # 假设这个地方的判断：
         # 后续根据碰撞进行修改，或者是其他的逻辑判断
         self.reset_buf = 0
 
-        collision_info = self.robot.check_ee_collision()
-        collision_termination = collision_info['collision_occurred']
+        # collision_info = self.robot.check_ee_collision()
+        # collision_termination = collision_info['collision_occurred']
 
         task_success = self.task.is_success()
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
 
-        self.reset_buf = self.time_out_buf | collision_termination | task_success
-    
+        # 碰撞逻辑，后面修改
+        # self.reset_buf = self.time_out_buf | collision_termination | task_success
+        self.reset_buf = self.time_out_buf |  task_success
+
     
     def compute_reward(self):
         """ Compute rewards
@@ -262,9 +250,21 @@ class RobotTaskEnv():
             adds each terms to the episode sums and to the total reward
         """
         self.rew_buf[:] = 0.
-        self.rew_buf=self.compute_reward_task()
-        # 累计到每回合和
-        self.episode_sums += self.rew_buf
+
+        for i in range(len(self.reward_functions)):
+            name = self.reward_names[i]
+            rew = self.reward_functions[i]() * self.reward_scales[name]
+            self.rew_buf += rew
+            self.episode_sums[name] += rew
+
+        # 后面进行一个补充
+        # if self.cfg.rewards.only_positive_rewards:
+        #     self.rew_buf[:] = torch.clip(self.rew_buf[:], min=0.)
+        #     # add termination reward after clipping
+        # if "termination" in self.reward_scales:
+        #     rew = self._reward_termination() * self.reward_scales["termination"]
+        #     self.rew_buf += rew
+        #     self.episode_sums["termination"] += rew
 
     def _reward_termination(self):#终止奖励
         # Terminal reward / penalty
@@ -280,5 +280,30 @@ class RobotTaskEnv():
         self.desired_goal_buf=self.task.get_goal()
         self.achieved_goal_buf=self.task.get_achieved_goal()
 
+    def _prepare_reward_function(self):
+        # 这个地方是有 self.cfg,就是所有的 LinkGraspCfg:
+        for key in list(self.reward_scales.keys()):
+            scale = self.reward_scales[key]
+            if scale == 0:
+                self.reward_scales.pop(key)
+            else:
+                self.reward_scales[key] *= self.dt
+            # prepare list of functions
+        self.reward_functions = []
+        self.reward_names = []
+        for name, scale in self.reward_scales.items():
+            if name == "termination":
+                continue
+            self.reward_names.append(name)
+            name = 'reward_' + name
+            self.reward_functions.append(getattr(self.task, name))
+
+        # reward episode sums
+        self.episode_sums = {
+            name: torch.zeros(self.num_envs, dtype=torch.float, device=self.device, requires_grad=False)
+            for name in self.reward_scales.keys()}
+
     def close(self) -> None:
         self.sim.close()
+
+
