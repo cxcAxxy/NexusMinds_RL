@@ -256,11 +256,7 @@ class RobotTaskEnv():
         # self.reset_buf = self.time_out_buf | collision_termination | task_success
         self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination
 
-        # test增加
-        if torch.any(self.reset_buf):
-            reset_ids = torch.nonzero(self.reset_buf).squeeze(-1)
-            print(self.episode_length_buf[reset_ids])
-            print(f"[Reset] env ids: {reset_ids.tolist()}")
+
 
     
     def compute_reward(self):

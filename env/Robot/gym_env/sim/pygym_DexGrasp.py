@@ -65,6 +65,13 @@ class Gym():
         print("Loading asset '%s' from '%s'" % (urdf_file, asset_root))
         self.robot_asset = self.gym.load_asset(self.sim, asset_root, urdf_file, asset_options)
         self.dof_names = self.gym.get_asset_dof_names(self.robot_asset)
+        shape_props = self.gym.get_asset_rigid_shape_properties(self.robot_asset)
+        for sp in shape_props:
+            sp.friction = 1.8             # 动摩擦系数
+            sp.rolling_friction = 0.0      # 滚动摩擦
+            sp.torsion_friction = 0.0      # 扭转摩擦
+            sp.restitution = 0.0           # 弹性（反弹）
+        self.gym.set_asset_rigid_shape_properties(self.robot_asset, shape_props)
 
     def create_table_asset(self):
         # 创建模板
@@ -78,6 +85,13 @@ class Gym():
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = False
         self.box_asset = self.gym.create_box(self.sim, box_size, box_size, box_size, asset_options)
+        shape_props = self.gym.get_asset_rigid_shape_properties(self.box_asset)
+        for sp in shape_props:
+            sp.friction = 1.2             # 动摩擦系数
+            sp.rolling_friction = 0.0      # 滚动摩擦
+            sp.torsion_friction = 0.0      # 扭转摩擦
+            sp.restitution = 0.0           # 弹性（反弹）
+        self.gym.set_asset_rigid_shape_properties(self.box_asset, shape_props)
 
     def create_ball_asset(self):
         radius = 0.025

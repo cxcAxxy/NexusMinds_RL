@@ -46,17 +46,17 @@ class Grasp_single_object(Task):
     def reset_ids(self, env_ids: torch.Tensor) -> torch.Tensor:
 
         """只为指定环境重置目标"""
-        goals = self._sample_goals(env_ids)
-        self.goal[env_ids] = goals
+        goals_pos = torch.tensor([0.5, 0, 0.5], dtype=torch.float32, device=self.device)
+        goals_pos = goals_pos.unsqueeze(0).expand(self.num_envs, 3)
+        self.goal = goals_pos
 
-    def _sample_goals(self, env_ids: int) -> torch.Tensor:
+    # def _sample_goals(self, env_ids: int) -> torch.Tensor:
 
-        """为若干环境随机生成目标 (num_envs, 3)"""
-        # 保证env先重置
-        goals_pos = self.sim.get_obj_position()##
-        goals_pos[env_ids ,2] += 0.2 ##
-        self.goals_pos = goals_pos[env_ids]
-        return self.goals_pos
+    #     """为若干环境随机生成目标 (num_envs, 3)"""
+    #     # 保证env先重置
+    #     goals_pos = torch.tensor([0.5, 0, 0.5], dtype=torch.float32, device=self.device)
+    #     self.goals_pos = goals_pos[env_ids]
+    #     return self.goals_pos
 
     def is_success(self) -> torch.Tensor:
         """判断是否成功 (num_envs,)"""
