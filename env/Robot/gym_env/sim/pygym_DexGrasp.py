@@ -53,7 +53,8 @@ class Gym():
             self.viewer = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
             if self.viewer is None:
                 raise Exception("Failed to create viewer")
-
+            
+            
     def create_robot_asset(self,urdf_file,asset_root):
         # 创建模板
         asset_options = gymapi.AssetOptions()
@@ -63,10 +64,11 @@ class Gym():
         asset_options.disable_gravity = True
         print("Loading asset '%s' from '%s'" % (urdf_file, asset_root))
         self.robot_asset = self.gym.load_asset(self.sim, asset_root, urdf_file, asset_options)
+        self.dof_names = self.gym.get_asset_dof_names(self.robot_asset)
 
     def create_table_asset(self):
         # 创建模板
-        table_dims = gymapi.Vec3(0.6, 1.0, 0.1)
+        table_dims = gymapi.Vec3(0.6, 1.0, 0.3)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         self.table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
@@ -90,16 +92,30 @@ class Gym():
         # set default DOF states
         self.default_dof_state = np.zeros(self.robot_num_dofs, gymapi.DofState.dtype)
         self.default_dof_state["pos"][:7] = self.robot_mids[:7]
+        self.default_dof_state["pos"][7:] = 0.0  #是否考虑手是否要显示表示其初始位置
+        self.default_dof_pos = torch.tensor(self.default_dof_state["pos"],dtype=torch.float32,device=self.device)
+        self.default_dof_pos = self.default_dof_pos.unsqueeze(0)
 
         # set DOF control properties (except grippers)
-        self.robot_dof_props["driveMode"][:7].fill(gymapi.DOF_MODE_EFFORT)
-        self.robot_dof_props["stiffness"][:7].fill(0.0)
-        self.robot_dof_props["damping"][:7].fill(0.0)
+        # self.robot_dof_props["driveMode"][:7].fill(gymapi.DOF_MODE_POS)
+        # self.robot_dof_props["stiffness"][:7].fill(0.0)
+        # self.robot_dof_props["damping"][:7].fill(0.0)
+    
+        # # set DOF control properties for grippers
+        # self.robot_dof_props["driveMode"][7:].fill(gymapi.DOF_MODE_POS)
+        # self.robot_dof_props["stiffness"][7:].fill(0)
+        # self.robot_dof_props["damping"][7:].fill(0)
+        self.torque_limits = torch.tensor(
+            self.robot_dof_props["effort"],
+            device=self.device,
+            dtype=torch.float32
+        )
+        self.torque_limits = self.torque_limits.unsqueeze(0) 
+        
 
-        # set DOF control properties for grippers
-        self.robot_dof_props["driveMode"][7:].fill(gymapi.DOF_MODE_EFFORT)
-        self.robot_dof_props["stiffness"][7:].fill(0)
-        self.robot_dof_props["damping"][7:].fill(0)
+        self.robot_dof_props["driveMode"][:].fill(gymapi.DOF_MODE_EFFORT)
+
+
 
 
     def create_envs_and_actors(self,num_envs,base_pos,base_orn):
@@ -109,7 +125,7 @@ class Gym():
         pose.r=gymapi.Quat(base_orn[0],base_orn[1],base_orn[2],base_orn[3])
 
         table_pose = gymapi.Transform()
-        table_pose.p = gymapi.Vec3(0.5, 0.0, 0.05)
+        table_pose.p = gymapi.Vec3(0.5, 0.0, 0.15)
 
 
         self.num_envs=num_envs
@@ -145,13 +161,13 @@ class Gym():
 
             box_goal_pose = self.generate_random_box_goal_pose()
 
-            table_handle = self.gym.create_actor(env, self.table_asset, table_pose, "table", i, 0)
+            table_handle = self.gym.create_actor(env, self.table_asset, table_pose, "table", i, 1)
             self.table_handles.append(table_handle)
             table_idx = self.gym.find_actor_rigid_body_index(env, table_handle, "table", gymapi.DOMAIN_SIM)
             self.table_idxs.append(table_idx)
             
 
-            box_handle = self.gym.create_actor(env, self.box_asset, box_goal_pose, "ball", i, 1)
+            box_handle = self.gym.create_actor(env, self.box_asset, box_goal_pose, "box", i, 0)
             red_color = gymapi.Vec3(1.0, 0.0, 0.0)  
             self.gym.set_rigid_body_color(env, box_handle, 0, gymapi.MESH_VISUAL_AND_COLLISION, red_color)
             self.box_handles.append(box_handle)
@@ -313,10 +329,21 @@ class Gym():
         u = torch.transpose(j_eef_arm, 1, 2) @ m_eef @ (kp * dpose).unsqueeze(-1) - kv * mm_arm @ dof_vel_arm
         return  u
     
-    def hand_joint_to_torque(self, joint_displacement, hand_joint_vel):
-        kp = 5
-        kv = 2 * math.sqrt(kp)
-        u = kp * joint_displacement.unsqueeze(-1) - kv * hand_joint_vel.unsqueeze(-1)
+    def body_joint_to_torque(self, body_displacement, body_joint_pos, body_joint_vel, kp , kv):
+        #u = kp * (body_displacement + self.default_dof_pos[:,:7] - body_joint_pos) - kv * body_joint_vel
+        u = kp * body_displacement  - kv * body_joint_vel
+        u = torch.clamp(u, -self.torque_limits[:,:7], self.torque_limits[:,:7])
+        return u
+
+    def hand_joint_to_torque(self, hand_displacement, hand_joint_pos, hand_joint_vel, kp, kv):
+        #u = kp * (hand_displacement + self.default_dof_pos[:,7:] - hand_joint_pos) - kv * hand_joint_vel
+        u = kp * hand_displacement  - kv * hand_joint_vel
+        u = torch.clamp(u, -self.torque_limits[:,7:], self.torque_limits[:,7:])
+        return u
+    
+    def joint_to_torque(self, displacement, joint_pos, joint_vel, kp, kv):
+        u = kp*(displacement + self.default_dof_pos - joint_pos) - kv*joint_vel
+        #u = torch.clamp(u, -self.torque_limits, self.torque_limits)
         return u
     
     def get_collision_forces(self):
@@ -389,20 +416,27 @@ class Gym():
         hand_joints_vel = self.dof_vel[:, 7:18, 0] 
         return hand_joints_vel
     
-    def get_joint_angle(self, joint_index):
-        return self.dof_pos[:, joint_index, 0]
+    def get_body_joint_pos(self):
+        body_joints_pos = self.dof_pos[:, :7, 0]
+        return body_joints_pos
+    
+    def get_body_joint_vel(self):
+        body_joints_vel = self.dof_vel[:, :7, 0]
+        return body_joints_vel
 
     # ✅ 获取所有关节角
-    def get_dof_positions(self):
-        return self.dof_pos
+    def get_joint_pos(self):
+        joint_pos = self.dof_pos[:, :, 0]
+        return joint_pos
 
     # ✅ 获取单个关节速度
     def get_joint_velocity(self, joint_index):
         return self.dof_vel[:, joint_index, 0]
 
     # ✅ 获取所有关节速度
-    def get_joint_velocities(self):
-        return self.dof_vel
+    def get_joint_vel(self):
+        joint_vel = self.dof_vel[:, :, 0]
+        return joint_vel
 
     # ✅ 设置关节角度
     def set_joint_angles(self, target_joints):
@@ -433,7 +467,7 @@ class Gym():
         box_goal_pose = gymapi.Transform()
         x = random.uniform(0.3, 0.7)
         y = random.uniform(-0.1, 0.1)
-        z = 0.125
+        z = 0.325
         box_goal_pose.p = gymapi.Vec3(x, y, z)
         box_goal_pose.r = gymapi.Quat(0, 0, 0, 1)
         return box_goal_pose
@@ -446,6 +480,22 @@ class Gym():
         box_goal_quat = self.rb_states[self.box_idxs, 3:7]
         return box_goal_quat
     
+    def get_finger_collision_info(self):
+        finger1_pos_z = self.rb_states[self.finger1_idxs, 2]
+        finger2_pos_z = self.rb_states[self.finger2_idxs, 2]
+        finger3_pos_z = self.rb_states[self.finger3_idxs, 2]
+        finger4_pos_z = self.rb_states[self.finger4_idxs, 2]
+        finger5_pos_z = self.rb_states[self.finger5_idxs, 2]
+        table_pos_z = 0.3  
+        collision_finger1 = finger1_pos_z < table_pos_z
+        collision_finger2 = finger2_pos_z < table_pos_z     
+        collision_finger3 = finger3_pos_z < table_pos_z
+        collision_finger4 = finger4_pos_z < table_pos_z
+        collision_finger5 = finger5_pos_z < table_pos_z
+        collision = collision_finger1 | collision_finger2 | collision_finger3 | collision_finger4 | collision_finger5
+        return {
+            'collision_flags': collision
+        }
 
     def create_plane(self):
         plane_params = gymapi.PlaneParams()
@@ -486,3 +536,12 @@ class Gym():
         self.gym.set_dof_state_tensor(self.sim, gymtorch.unwrap_tensor(self.dof_states))
         # 刷新张量视图
         self.refresh()
+
+    def get_num_dofs(self):
+        robot_dof_props = self.gym.get_asset_dof_properties(self.robot_asset)
+        robot_num_dofs = len(robot_dof_props)
+        return robot_num_dofs
+    
+    def get_dof_names(self):
+        dof_names = self.gym.get_asset_dof_names(self.robot_asset)
+        return dof_names

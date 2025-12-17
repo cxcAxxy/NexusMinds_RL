@@ -179,8 +179,6 @@ class RobotTaskEnv():
             self.episode_sums[key][env_ids] = 0.
         self.extras["time_outs"] = self.time_out_buf
 
-        print("reset idx里面")
-        print(self.episode_length_buf[env_ids])
 
         self.rew_buf[env_ids] = 0.
         self.episode_length_buf[env_ids] = 0.
@@ -222,8 +220,6 @@ class RobotTaskEnv():
         self.extras = {}
 
         self.episode_length_buf += 1
-        print("-------------")
-        print(self.episode_length_buf)
 
         self.check_termination()
 
@@ -248,6 +244,9 @@ class RobotTaskEnv():
         # collision_info = self.robot.check_ee_collision()
         # collision_termination = collision_info['collision_occurred']
 
+        finger_collision_info = self.robot.check_finger_collision()
+        finger_collision_termination = finger_collision_info['collision_occurred']
+
         task_success = self.task.is_success()
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
@@ -255,7 +254,7 @@ class RobotTaskEnv():
 
         # 碰撞逻辑，后面修改
         # self.reset_buf = self.time_out_buf | collision_termination | task_success
-        self.reset_buf = self.time_out_buf |  task_success
+        self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination
 
         # test增加
         if torch.any(self.reset_buf):

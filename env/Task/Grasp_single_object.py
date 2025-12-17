@@ -96,7 +96,3 @@ class Grasp_single_object(Task):
         reward_pos = torch.exp(-self.alpha_pos * d)
 
         return self.pos_reach_distance * reward_pos
-
-    def reward_test(self):
-
-        return 1

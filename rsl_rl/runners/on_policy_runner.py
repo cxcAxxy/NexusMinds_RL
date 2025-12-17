@@ -115,8 +115,6 @@ class OnPolicyRunner:
                     if self.log_dir is not None:
                         # Book keeping
                         if 'episode' in infos:
-
-                            print(infos)
                             ep_infos.append(infos['episode'])#记录回合信息
 
 

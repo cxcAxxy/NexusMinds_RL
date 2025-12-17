@@ -32,9 +32,8 @@ class rslCfgPPO(BaseConfig):
     class runner:
         policy_class_name = 'ActorCritic'
         algorithm_class_name = 'PPO'
-        num_steps_per_env = 50
-        # per iteration
-        max_iterations = 1  # number of policy updates
+        num_steps_per_env = 24  # per iteration
+        max_iterations = 3000  # number of policy updates
 
         # logging
         save_interval = 50  # check for potential saves every this many iterations

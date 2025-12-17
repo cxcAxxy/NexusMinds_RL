@@ -12,8 +12,18 @@ class LinkerHand06(Robot):
         self.num_actions = cfg.num_actions
         self.num_obs = cfg.num_obs
         self.num_envs = cfg.num_envs
+        self.robot_num_dofs = cfg.robot_num_dofs
         self.sim = sim
         self.cfg = cfg
+
+        self.kp = torch.zeros(self.num_actions, dtype=torch.float, device=self.sim.device, requires_grad=False)
+        self.kv = torch.zeros(self.num_actions, dtype=torch.float, device=self.sim.device, requires_grad=False)
+
+        for i in range(self.robot_num_dofs):
+            for dof_name in self.cfg.stiffness.keys():
+                self.kp[i] = self.cfg.stiffness[dof_name]
+                self.kv[i] = self.cfg.damping[dof_name]
+
         # 准备资产，创建环境，为后续的控制做好准备
         self.sim.pre_simulate(cfg.num_envs, cfg.asset, cfg.robot_files, cfg.base_pose, cfg.base_orn)
 
@@ -21,22 +31,32 @@ class LinkerHand06(Robot):
         action = action.clone()  # ensure action don't change
         action = torch.clamp(action, self.cfg.action_low, self.cfg.action_high)
         if self.cfg.control_type == "ee":
-            ee_displacement = action[:, :3]
-            joint_displacement = action[:, 3:14]
+            body_displacement = action[:, :7]
+            hand_displacement = action[:, 7:]
+            body_displacement = body_displacement * 0.05  # 这里的系数需要考虑
+            hand_displacement = hand_displacement * 0.05
 
-            # limit maxium change in position
+            body_joint_pos = self.sim.get_joint_pos()[:, :7]
+            body_joint_vel = self.sim.get_joint_vel()[:, :7]
 
-            ee_displacement = ee_displacement * 0.05  # limit maximum change in position
-            joint_displacement = joint_displacement * 0.05  # limit maximum change in position
+            hand_joint_pos = self.sim.get_joint_pos()[:, 7:]
+            hand_joint_vel = self.sim.get_joint_vel()[:, 7:]
 
-            # 计算对应的des_pos和des_orn
-            hand_joint_vel = self.sim.get_hand_joint_vel()
+            body_kp = self.kp[:7]
+            body_kv = self.kv[:7]
 
-            u2 = self.sim.hand_joint_to_torque(joint_displacement, hand_joint_vel)
+            hand_kp = self.kp[7:]
+            hand_kv = self.kv[7:]
 
-            des_pos = self.sim.get_ee_position() + ee_displacement
-            des_orn = self.sim.get_ee_orientation()
-            u1 = self.sim.ee_pos_to_torque(des_pos, des_orn)
+            distance = self.sim.get_hand_to_object_distance()
+            distance = torch.norm(distance, dim=-1)
+            mask = distance > 0.1
+
+            u1 = self.sim.body_joint_to_torque(body_displacement, body_joint_pos, body_joint_vel, body_kp , body_kv)
+            #加判断条件
+            
+            u2 = self.sim.hand_joint_to_torque(hand_displacement, hand_joint_pos, hand_joint_vel, hand_kp, hand_kv)
+            u2[mask] = 0
 
             u = torch.cat([u1, u2], dim=1)
 
@@ -49,7 +69,7 @@ class LinkerHand06(Robot):
 
     def get_obs(self) -> torch.Tensor:
         # end-effector position  velocity orientation  angular velocity
-        dof_pos = self.sim.get_dof_positions().squeeze(-1)
+        dof_pos = self.sim.get_joint_pos().squeeze(-1)
         ee_position = self.sim.get_ee_position()
         ee_orientation = self.sim.get_ee_orientation()
         ee_velocity = self.sim.get_ee_velocity()
@@ -116,7 +136,12 @@ class LinkerHand06(Robot):
         target_arm_angles = current_arm_joint_angles + arm_joint_ctrl
         return target_arm_angles
 
-    def check_ee_collision(self, force_threshold=0.01):
+    def check_hand_collision(self, force_threshold=0.01):
         collision_info = self.sim.get_ee_collision_info()
         collision = collision_info['force_magnitudes'] > force_threshold
+        return {'collision_occurred': collision}
+    
+    def check_finger_collision(self):
+        collision_info = self.sim.get_finger_collision_info()
+        collision = collision_info['collision_flags']
         return {'collision_occurred': collision}

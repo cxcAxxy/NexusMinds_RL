@@ -6,7 +6,7 @@ args = gymutil.parse_arguments(
     custom_parameters=[
         {"name": "--use_gpu", "type": bool, "default": True, "help": "Use GPU for physics"},
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
-        {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
+        {"name": "--headless", "type": bool, "default": True, "help": "Run simulation without viewer"},
     ]
 )
 
@@ -18,7 +18,7 @@ class GlobalCfg:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # 环境数量
-        self.num_envs = 4
+        self.num_envs = 4096
 
 class GymCfg:
     """仿真器配置"""
@@ -42,13 +42,14 @@ class RobotCfg:
         # 控制相关参数
         self.control_type = "ee"
         self.block_gripper = True
-        self.num_actions = 14
+        self.num_actions = 18
         self.num_obs = 51
+        self.robot_num_dofs = 18
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/cxc/Desktop/NexusMInds_RL/env/assets"
+        self.asset = "/home/gu/NexusMInds_RL/env/assets"
         self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
@@ -59,6 +60,55 @@ class RobotCfg:
         self.control_decimation = 6
         self.action_low = -1
         self.action_high = 1
+
+
+        self.stiffness_robot = 120
+        self.damping_robot = 22
+
+        self.stiffness_hand = 40
+        self.damping_hand = 10
+
+        self.stiffness = {
+            "panda_joint1": self.stiffness_robot,
+            "panda_joint2": self.stiffness_robot,
+            "panda_joint3": self.stiffness_robot,
+            "panda_joint4": self.stiffness_robot,
+            "panda_joint5": self.stiffness_robot, 
+            "panda_joint6": self.stiffness_robot,
+            "panda_joint7": self.stiffness_robot,
+            "thumb_cmc_yaw" : self.stiffness_hand,
+            "thumb_cmc_pitch" : self.stiffness_hand,
+            "thumb_ip" : self.stiffness_hand,
+            "index_mcp_pitch" : self.stiffness_hand,
+            "index_dip" : self.stiffness_hand,
+            "middle_mcp_pitch" : self.stiffness_hand,
+            "middle_dip" : self.stiffness_hand,
+            "ring_mcp_pitch" : self.stiffness_hand,
+            "ring_dip" : self.stiffness_hand,
+            "pinky_mcp_pitch" : self.stiffness_hand,
+            "pinky_dip" : self.stiffness_hand
+        }
+
+        self.damping = {
+            "panda_joint1": self.damping_robot,
+            "panda_joint2": self.damping_robot,
+            "panda_joint3": self.damping_robot,
+            "panda_joint4": self.damping_robot,
+            "panda_joint5": self.damping_robot,
+            "panda_joint6": self.damping_robot,
+            "panda_joint7": self.damping_robot,
+            "thumb_cmc_yaw" : self.damping_hand,
+            "thumb_cmc_pitch" : self.damping_hand,
+            "thumb_ip" : self.damping_hand,
+            "index_mcp_pitch" : self.damping_hand,
+            "index_dip" : self.damping_hand,
+            "middle_mcp_pitch" : self.damping_hand,
+            "middle_dip" : self.damping_hand,
+            "ring_mcp_pitch" : self.damping_hand,
+            "ring_dip" : self.damping_hand,
+            "pinky_mcp_pitch" : self.damping_hand,
+            "pinky_dip" : self.damping_hand
+        }
 
 
 class TaskCfg:
@@ -88,7 +138,6 @@ class TaskCfg:
             "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
             "grasp_mid_point" : self.c1 * self.c4 * self.c6,
             "pos_reach_distance" : self.c2 ,
-            "test" : 1
         }
 
 
@@ -100,7 +149,7 @@ class AllCfg:
         self.num_envs = global_cfg.num_envs
         self.num_achieved_goal = 3
         self.num_desired_goal = 3
-        self.max_episode_length = 200
+        self.max_episode_length = 400
         self.max_episode_length_s = 4.0  # 秒数形式（用于日志统计）
         self.decimation = 4
         self.control_type_sim = "effort"
