@@ -148,9 +148,6 @@ class Gym():
 
         self.robot_dof_props["driveMode"][:].fill(gymapi.DOF_MODE_EFFORT)
 
-
-
-
     def create_envs_and_actors(self,num_envs,base_pos,base_orn):
         # 首先是根据 base_pos和base_orn创建对应的 gyapi.Transform()
         pose=gymapi.Transform()
@@ -278,6 +275,13 @@ class Gym():
         self.gym.prepare_sim(self.sim)
         self.get_state_tensors()
 
+        # 修改
+        self.gym.simulate(self.sim)
+        self.gym.fetch_results(self.sim, True)
+        self.refresh()
+
+        # 现在才是合法的初始状态
+        self.initial_root_states = self.root_states.clone()
     def get_state_tensors(self):
 
         self._rb_states = self.gym.acquire_rigid_body_state_tensor(self.sim)
@@ -290,23 +294,22 @@ class Gym():
         self.contact_forces = gymtorch.wrap_tensor(self._contact_forces)
 
         self._root_states = self.gym.acquire_actor_root_state_tensor(self.sim)
-        self.root_states = gymtorch.wrap_tensor(self._root_states)  
-        self.initial_root_states = self.root_states.clone()
+        self.root_states = gymtorch.wrap_tensor(self._root_states)
 
         # 拆分位置与速度分量
         self.dof_pos = self.dof_states[:, 0].view(self.num_envs, -1, 1)
         self.dof_vel = self.dof_states[:, 1].view(self.num_envs, -1, 1)
 
-        self._jacobian = self.gym.acquire_jacobian_tensor(self.sim, "franka")
-        self.jacobian = gymtorch.wrap_tensor(self._jacobian)
-
-        # Jacobian entries for end effector
-        self.ee_index = self.gym.get_asset_rigid_body_dict(self.robot_asset)["hand_base_link"]
-        self.j_eef = self.jacobian[:, self.ee_index - 1, :]
-
-        # Prepare mass matrix tensor
-        self._massmatrix = self.gym.acquire_mass_matrix_tensor(self.sim, "franka")
-        self.mm = gymtorch.wrap_tensor(self._massmatrix)
+        # self._jacobian = self.gym.acquire_jacobian_tensor(self.sim, "franka")
+        # self.jacobian = gymtorch.wrap_tensor(self._jacobian)
+        #
+        # # Jacobian entries for end effector
+        # self.ee_index = self.gym.get_asset_rigid_body_dict(self.robot_asset)["hand_base_link"]
+        # self.j_eef = self.jacobian[:, self.ee_index - 1, :]
+        #
+        # # Prepare mass matrix tensor
+        # self._massmatrix = self.gym.acquire_mass_matrix_tensor(self.sim, "franka")
+        # self.mm = gymtorch.wrap_tensor(self._massmatrix)
         self.refresh()
 
     # 仿真步骤步进一次
@@ -510,11 +513,11 @@ class Gym():
         return box_goal_pose
     
     def get_obj_position(self):
-        box_goal_pose = self.rb_states[self.box_idxs, :3]
+        box_goal_pose = self.root_states[self.root_box_idxs, :3]
         return box_goal_pose
     
     def get_obj_quaternion(self):
-        box_goal_quat = self.rb_states[self.box_idxs, 3:7]
+        box_goal_quat = self.root_states[self.root_box_idxs, 3:7]
         return box_goal_quat
     
     def get_finger_collision_info(self):
