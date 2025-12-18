@@ -6,7 +6,7 @@ args = gymutil.parse_arguments(
     custom_parameters=[
         {"name": "--use_gpu", "type": bool, "default": True, "help": "Use GPU for physics"},
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
-        {"name": "--headless", "type": bool, "default": True, "help": "Run simulation without viewer"},
+        {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
     ]
 )
 
@@ -18,7 +18,7 @@ class GlobalCfg:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # 环境数量
-        self.num_envs = 4096
+        self.num_envs = 4
 
 class GymCfg:
     """仿真器配置"""

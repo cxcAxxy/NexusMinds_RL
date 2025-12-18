@@ -8,6 +8,7 @@ from isaacgym import gymapi, gymutil
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch
 import math
+import sys
 
 import torch
 #后期，配置文件的参数，仿真的一些可视化参数。
@@ -47,12 +48,21 @@ class Gym():
         self.sim = self.gym.create_sim(args.compute_device_id, args.graphics_device_id, args.physics_engine,self.sim_params)
         if self.sim is None:
             raise Exception("Failed to create sim")
+        
+        self.enable_viewer = False
 
         # create viewer
-        if self.args.headless == False:
-            self.viewer = self.gym.create_viewer(self.sim, gymapi.CameraProperties())
-            if self.viewer is None:
-                raise Exception("Failed to create viewer")
+        if not getattr(self.args, 'headless', False):
+            self.viewer = self.gym.create_viewer(
+                self.sim, gymapi.CameraProperties()
+            )
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_V, "toggle_viewer"
+            )
+            self.gym.subscribe_viewer_keyboard_event(
+                self.viewer, gymapi.KEY_ESCAPE, "QUIT"
+            )
+                    
             
             
     def create_robot_asset(self,urdf_file,asset_root):
@@ -297,13 +307,10 @@ class Gym():
             raise ValueError(f"Unsupported control type: {self.control_type}. Must be one of ['effort', 'velocity', 'position'].")
         # Step the physics
         self.gym.simulate(self.sim)
-        self.gym.fetch_results(self.sim, True)
 
         self.refresh()
     # Step rendering (skip when headless)
-        if not getattr(self.args, 'headless', False):
-            self.gym.step_graphics(self.sim)
-            self.gym.draw_viewer(self.viewer, self.sim, False)
+        self.render()
 
     def refresh(self):
         # 看上层从底层读取了什么,那么这个地方就进行了一个什么refresh
@@ -559,3 +566,29 @@ class Gym():
     def get_dof_names(self):
         dof_names = self.gym.get_asset_dof_names(self.robot_asset)
         return dof_names
+    
+    def render(self, sync_frame_time=True):
+        if self.viewer:
+            # check for window closed
+            if self.gym.query_viewer_has_closed(self.viewer):
+                sys.exit()
+
+            # check for keyboard events
+            for evt in self.gym.query_viewer_action_events(self.viewer):
+                if evt.action == "QUIT" and evt.value > 0:
+                    sys.exit()
+                elif evt.action == "toggle_viewer" and evt.value > 0:
+                    self.enable_viewer = not self.enable_viewer
+
+            # fetch results
+            if self.device != 'cpu':
+                self.gym.fetch_results(self.sim, True)
+
+            # step graphics
+            if self.enable_viewer:
+                self.gym.step_graphics(self.sim)
+                self.gym.draw_viewer(self.viewer, self.sim, True)
+                if sync_frame_time:
+                    self.gym.sync_frame_time(self.sim)
+            else:
+                self.gym.poll_viewer_events(self.viewer)
