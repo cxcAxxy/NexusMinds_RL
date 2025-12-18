@@ -6,19 +6,21 @@ args = gymutil.parse_arguments(
     custom_parameters=[
         {"name": "--use_gpu", "type": bool, "default": True, "help": "Use GPU for physics"},
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
-        {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
-    ]
+        {"name": "--headless", "type": bool, "default": True, "help": "Run simulation without viewer"},
+        {"name": "--logdir", "type": str, "default": "logs", "help": "Directory for logging"},
+        {"name": "--num_envs", "type":int, "default": 4, "help": "the number of environments to train"},
+    ]   
 )
 
 class GlobalCfg:
     """全局共享配置 - 统一管理所有组件的共同参数"""
 
-    def __init__(self):
+    def __init__(self,args):
         # 设备配置
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+        self.device = args.sim_device if torch.cuda.is_available() and args.use_gpu else 'cpu'
         # 环境数量
-        self.num_envs = 4
+        self.num_envs = args.num_envs
+        self.logdir = args.logdir
 
 class GymCfg:
     """仿真器配置"""
@@ -38,7 +40,7 @@ class GymCfg:
 class RobotCfg:
     """机械臂配置"""
 
-    def __init__(self, global_cfg):
+    def __init__(self,global_cfg):
         # 控制相关参数
         self.control_type = "ee"
         self.block_gripper = True
@@ -114,9 +116,9 @@ class RobotCfg:
 class TaskCfg:
     """Franka Reach 任务配置"""
 
-    def __init__(self, global_cfg):
+    def __init__(self,global_cfg):
         self.name = "Reach"
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = global_cfg.device
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
 
         self.reward_type = "dense"
@@ -124,14 +126,14 @@ class TaskCfg:
 
         # 定义所有的参数，后续根据那公式划分一下公式
         self.c1 = 1
-        self.c2 = 1
+        self.c2 = 3
         self.c3 = 1
         self.c4 = 1
         self.c5 = 1
         self.c6 = 1
 
         self.alpha_mid =1
-        self.alpha_pos =1
+        self.alpha_pos =0.5
 
         # 改为字典的方式：
         self.reward_scales = {
@@ -144,8 +146,8 @@ class TaskCfg:
 class AllCfg:
     """环境总体配置"""
 
-    def __init__(self, global_cfg):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def __init__(self,global_cfg):
+        self.device = global_cfg.device
         self.num_envs = global_cfg.num_envs
         self.num_achieved_goal = 3
         self.num_desired_goal = 3
@@ -159,7 +161,7 @@ class LinkGraspCfg:
     """总配置类"""
 
     def __init__(self):
-        self.global_cfg = GlobalCfg()
+        self.global_cfg = GlobalCfg(args)
         self.gymcfg = GymCfg(args)
         self.robotcfg = RobotCfg(self.global_cfg)
         self.taskcfg = TaskCfg(self.global_cfg)

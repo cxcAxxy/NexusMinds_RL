@@ -66,11 +66,11 @@ class Grasp_single_object(Task):
 
         d = torch.norm( achieved_goal- self.goal, dim=-1)
         return d < self.distance_threshold
-
+     
     def reward_grasp_goal_distance(self):
         achieved_goal = self.get_achieved_goal()
 
-        d = torch.norm(achieved_goal - self.goal, dim=-1)
+        d = self.goal[:, 2] - achieved_goal[:, 2] 
         if self.reward_type == "sparse":
             goal_distance = (d > self.distance_threshold).float()
         else:
@@ -91,7 +91,7 @@ class Grasp_single_object(Task):
 
         fingers_mid = self.sim.get_fingers_mid_point()
 
-        d = torch.norm(fingers_mid - self.sim.get_obj_position())
+        d = torch.norm(fingers_mid - self.sim.get_obj_position(), dim=-1)
 
         reward_pos = torch.exp(-self.alpha_pos * d)
 

@@ -20,6 +20,7 @@ class Gym():
     def __init__(self,args):
         self.args=args
         self.gym=gymapi.acquire_gym()
+        
 
         # 配置物理仿真参数
         self.sim_params = gymapi.SimParams()
@@ -38,11 +39,18 @@ class Gym():
             raise Exception("This example can only be used with PhysX")
 
         # 根据参数确定张量设备
-        if getattr(args, 'use_gpu', False) or getattr(args, 'use_gpu_pipeline', False):
-            compute_id = getattr(args, 'compute_device_id', 0)
-            self.device = torch.device(f'cuda:{compute_id}') if torch.cuda.is_available() else torch.device('cpu')
+        # if getattr(args, 'use_gpu', False) or getattr(args, 'use_gpu_pipeline', False):
+        #     compute_id = getattr(args, 'compute_device_id', 0)
+        #     self.device = torch.device(f'cuda:{compute_id}') if torch.cuda.is_available() else torch.device('cpu')
+        # else:
+        #     self.device = torch.device('cpu')
+
+        self.sim_device = args.sim_device            # 'cuda:0' / 'cuda:1' / 'cpu'  
+        self.device = torch.device(self.sim_device)
+        if self.sim_device.startswith("cuda"):
+            self.compute_device_id = int(self.sim_device.split(":")[1])
         else:
-            self.device = torch.device('cpu')
+            self.compute_device_id = -1
 
         # create sim
         self.sim = self.gym.create_sim(args.compute_device_id, args.graphics_device_id, args.physics_engine,self.sim_params)
@@ -50,6 +58,7 @@ class Gym():
             raise Exception("Failed to create sim")
         
         self.enable_viewer = False
+        self.viewer = None
 
         # create viewer
         if not getattr(self.args, 'headless', False):
@@ -85,7 +94,7 @@ class Gym():
 
     def create_table_asset(self):
         # 创建模板
-        table_dims = gymapi.Vec3(0.6, 1.0, 0.3)
+        table_dims = gymapi.Vec3(1, 4, 0.3)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         self.table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
@@ -149,7 +158,7 @@ class Gym():
         pose.r=gymapi.Quat(base_orn[0],base_orn[1],base_orn[2],base_orn[3])
 
         table_pose = gymapi.Transform()
-        table_pose.p = gymapi.Vec3(0.5, 0.0, 0.15)
+        table_pose.p = gymapi.Vec3(0.7, 0.0, 0.15)
 
 
         self.num_envs=num_envs
@@ -159,6 +168,7 @@ class Gym():
         self.table_idxs=[]
         self.box_handles=[]
         self.box_idxs=[]
+        self.root_box_idxs=[]
 
         self.ee_handles=[]
         self.ee_idxs=[]
@@ -197,6 +207,8 @@ class Gym():
             self.box_handles.append(box_handle)
             box_idx = self.gym.get_actor_rigid_body_index(env, box_handle, 0, gymapi.DOMAIN_SIM)
             self.box_idxs.append(box_idx)
+            root_box_idx = self.gym.get_actor_index(env,box_handle,gymapi.DOMAIN_SIM)
+            self.root_box_idxs.append(root_box_idx)
 
             # Add franka
             robot_handle = self.gym.create_actor(env, self.robot_asset, pose, "franka", i, 1)
@@ -277,6 +289,9 @@ class Gym():
         self._contact_forces = self.gym.acquire_net_contact_force_tensor(self.sim)
         self.contact_forces = gymtorch.wrap_tensor(self._contact_forces)
 
+        self._root_states = self.gym.acquire_actor_root_state_tensor(self.sim)
+        self.root_states = gymtorch.wrap_tensor(self._root_states)  
+        self.initial_root_states = self.root_states.clone()
 
         # 拆分位置与速度分量
         self.dof_pos = self.dof_states[:, 0].view(self.num_envs, -1, 1)
@@ -323,6 +338,7 @@ class Gym():
         self.gym.refresh_jacobian_tensors(self.sim)
         self.gym.refresh_mass_matrix_tensors(self.sim)
         self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_actor_root_state_tensor(self.sim)
 
     def ee_pos_to_torque(self,pos_des,orn_des):
         # 由末端位置控制,由雅可比矩阵等计算出对应的力矩
@@ -556,6 +572,32 @@ class Gym():
         # 回写整张 dof 状态张量（GPU pipeline 允许）
         self.gym.set_dof_state_tensor(self.sim, gymtorch.unwrap_tensor(self.dof_states))
         # 刷新张量视图
+        self.refresh()
+
+    def reset_object_states(self, env_ids):
+        # if env_ids is None or len(env_ids) == 0:
+        #     return
+        # # 确保最新的 dof tensor 已获取
+
+        # for env_idx in env_ids.tolist():
+
+        #     self.root_states[self.box_idxs, :3][env_idx] = self.initial_root_states[self.box_idxs, :3][env_idx]
+        #     self.root_states[self.box_idxs, 3:7][env_idx] = self.initial_root_states[self.box_idxs, 3:7][env_idx]
+        #     self.root_states[self.box_idxs, 7:13][env_idx] = torch.zeros(6, device=self.root_states.device)
+
+        # self.gym.set_actor_root_state_tensor(self.sim)
+        # self.refresh()
+        if env_ids is None or len(env_ids) == 0:
+            return
+
+        for env_idx in env_ids.tolist():
+            reset_obj_idxs = self.root_box_idxs[env_idx]   # ✅ 关键一步
+
+            self.root_states[reset_obj_idxs, 0:3] = self.initial_root_states[reset_obj_idxs, 0:3]
+            self.root_states[reset_obj_idxs, 3:7] = self.initial_root_states[reset_obj_idxs, 3:7]
+            self.root_states[reset_obj_idxs, 7:13] = torch.zeros(6, device=self.root_states.device)
+
+        self.gym.set_actor_root_state_tensor(self.sim, gymtorch.unwrap_tensor(self.root_states))
         self.refresh()
 
     def get_num_dofs(self):

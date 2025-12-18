@@ -89,6 +89,7 @@ class LinkerHand06(Robot):
     def reset_ids(self, env_ids):
         # 重置关节位置和速度
         self.sim.reset_joint_states(env_ids)
+        self.sim.reset_object_states(env_ids)
 
     def reset(self) -> None:
         """Reset the robot and return the observation."""

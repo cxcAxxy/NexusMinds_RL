@@ -27,3 +27,5 @@ def train():
 
 if __name__ == '__main__':
     train()
+
+#python train.py --sim_device "cuda:1" --graphics_device_id 1 --logdir logs_c2:3_alpha_pos:0.5
