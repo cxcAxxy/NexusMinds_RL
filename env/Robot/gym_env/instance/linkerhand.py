@@ -146,3 +146,8 @@ class LinkerHand06(Robot):
         collision_info = self.sim.get_finger_collision_info()
         collision = collision_info['collision_flags']
         return {'collision_occurred': collision}
+    
+    def check_body_collision(self):
+        collision_info = self.sim.get_body_collision_info()
+        collision = collision_info['collision_flags']
+        return {'collision_occurred': collision}

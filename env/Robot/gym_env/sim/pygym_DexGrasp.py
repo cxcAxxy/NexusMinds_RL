@@ -178,6 +178,10 @@ class Gym():
         self.finger3_idxs=[]
         self.finger4_idxs=[]  
         self.finger5_idxs=[]
+        self.body_link3_idxs=[]
+        self.body_link4_idxs=[]
+        self.body_link5_idxs=[]
+        self.body_link6_idxs=[]
 
         self.init_pos_list=[]
         self.init_orn_list=[]
@@ -237,6 +241,15 @@ class Gym():
             self.finger4_idxs.append(finger4_idx)
             finger5_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "pinky_distal", gymapi.DOMAIN_SIM)
             self.finger5_idxs.append(finger5_idx)
+
+            body_link3_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "panda_link3", gymapi.DOMAIN_SIM)
+            self.body_link3_idxs.append(body_link3_idx)
+            body_link4_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "panda_link4", gymapi.DOMAIN_SIM)
+            self.body_link4_idxs.append(body_link4_idx)
+            body_link5_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "panda_link5", gymapi.DOMAIN_SIM)
+            self.body_link5_idxs.append(body_link5_idx)
+            body_link6_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "panda_link6", gymapi.DOMAIN_SIM)
+            self.body_link6_idxs.append(body_link6_idx)
 
             
 
@@ -534,6 +547,21 @@ class Gym():
         collision_finger4 = finger4_pos_z < table_pos_z
         collision_finger5 = finger5_pos_z < table_pos_z
         collision = collision_finger1 | collision_finger2 | collision_finger3 | collision_finger4 | collision_finger5
+        return {
+            'collision_flags': collision
+        }
+    
+    def get_body_collision_info(self):
+        body_link3_pos_z = self.rb_states[self.body_link3_idxs, 2]
+        body_link4_pos_z = self.rb_states[self.body_link4_idxs, 2]
+        body_link5_pos_z = self.rb_states[self.body_link5_idxs, 2]
+        body_link6_pos_z = self.rb_states[self.body_link6_idxs, 2]
+        table_pos_z = 0.3  
+        collision_body3 = body_link3_pos_z < table_pos_z
+        collision_body4 = body_link4_pos_z < table_pos_z     
+        collision_body5 = body_link5_pos_z < table_pos_z
+        collision_body6 = body_link6_pos_z < table_pos_z
+        collision = collision_body3 | collision_body4 | collision_body5 | collision_body6
         return {
             'collision_flags': collision
         }

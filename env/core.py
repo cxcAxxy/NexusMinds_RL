@@ -247,6 +247,9 @@ class RobotTaskEnv():
         finger_collision_info = self.robot.check_finger_collision()
         finger_collision_termination = finger_collision_info['collision_occurred']
 
+        body_collision_info = self.robot.check_body_collision()
+        body_collision_termination = body_collision_info['collision_occurred']
+
         task_success = self.task.is_success()
 
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
@@ -254,7 +257,7 @@ class RobotTaskEnv():
 
         # 碰撞逻辑，后面修改
         # self.reset_buf = self.time_out_buf | collision_termination | task_success
-        self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination
+        self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination | body_collision_termination
 
 
 

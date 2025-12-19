@@ -22,7 +22,7 @@ def train():
     
     # 将 Runner 放在与环境一致的设备上
 
-    ppo_runner = OnPolicyRunner(env=env, train_cfg=train_cfg, log_dir='logs', device=str(env.device))
+    ppo_runner = OnPolicyRunner(env=env, train_cfg=train_cfg, log_dir=cfg.global_cfg.logdir, device=str(env.device))
     ppo_runner.learn(num_learning_iterations=train_cfg["runner"]["max_iterations"], init_at_random_ep_len=True)
 
 if __name__ == '__main__':

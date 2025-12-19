@@ -8,7 +8,7 @@ args = gymutil.parse_arguments(
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
         {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
         {"name": "--logdir", "type": str, "default": "logs", "help": "Directory for logging"},
-        {"name": "--num_envs", "type":int, "default": 4096, "help": "the number of environments to train"},
+        {"name": "--num_envs", "type":int, "default": 20, "help": "the number of environments to train"},
     ]   
 )
 
@@ -51,7 +51,7 @@ class RobotCfg:
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/cxc/Desktop/NexusMInds_RL/env/assets"
+        self.asset = "/home/gu/NexusMInds_RL/env/assets"
         self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
