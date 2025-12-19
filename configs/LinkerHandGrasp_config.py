@@ -51,7 +51,7 @@ class RobotCfg:
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/gu/NexusMInds_RL/env/assets"
+        self.asset = "/home/cxc/Desktop/NexusMInds_RL/env/assets"
         self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
