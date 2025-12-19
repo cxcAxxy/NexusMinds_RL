@@ -6,9 +6,9 @@ args = gymutil.parse_arguments(
     custom_parameters=[
         {"name": "--use_gpu", "type": bool, "default": True, "help": "Use GPU for physics"},
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
-        {"name": "--headless", "type": bool, "default": True, "help": "Run simulation without viewer"},
+        {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
         {"name": "--logdir", "type": str, "default": "logs", "help": "Directory for logging"},
-        {"name": "--num_envs", "type":int, "default": 4, "help": "the number of environments to train"},
+        {"name": "--num_envs", "type":int, "default": 4096, "help": "the number of environments to train"},
     ]   
 )
 
@@ -129,10 +129,10 @@ class TaskCfg:
         self.c2 = 3
         self.c3 = 1
         self.c4 = 1
-        self.c5 = 1
-        self.c6 = 1
+        self.c5 = 2
+        self.c6 = 2
 
-        self.alpha_mid =1
+        self.alpha_mid =0.5
         self.alpha_pos =0.5
 
         # 改为字典的方式：
@@ -151,7 +151,7 @@ class AllCfg:
         self.num_envs = global_cfg.num_envs
         self.num_achieved_goal = 3
         self.num_desired_goal = 3
-        self.max_episode_length = 400
+        self.max_episode_length = 800
         self.max_episode_length_s = 4.0  # 秒数形式（用于日志统计）
         self.decimation = 4
         self.control_type_sim = "effort"

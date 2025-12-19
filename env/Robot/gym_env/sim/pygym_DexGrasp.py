@@ -59,7 +59,7 @@ class Gym():
         
         self.enable_viewer = False
         self.viewer = None
-
+        
         # create viewer
         if not getattr(self.args, 'headless', False):
             self.viewer = self.gym.create_viewer(
@@ -94,13 +94,13 @@ class Gym():
 
     def create_table_asset(self):
         # 创建模板
-        table_dims = gymapi.Vec3(1, 4, 0.3)
+        table_dims = gymapi.Vec3(1, 1, 0.3)
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = True
         self.table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
     def create_box_asset(self):
-        box_size = 0.05
+        box_size = 0.03
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = False
         self.box_asset = self.gym.create_box(self.sim, box_size, box_size, box_size, asset_options)
@@ -278,6 +278,12 @@ class Gym():
         self.gym.prepare_sim(self.sim)
         self.get_state_tensors()
 
+        self.gym.simulate(self.sim)
+        self.gym.fetch_results(self.sim, True)
+        self.refresh()
+        self.initial_root_states = self.root_states.clone()
+
+
     def get_state_tensors(self):
 
         self._rb_states = self.gym.acquire_rigid_body_state_tensor(self.sim)
@@ -291,7 +297,6 @@ class Gym():
 
         self._root_states = self.gym.acquire_actor_root_state_tensor(self.sim)
         self.root_states = gymtorch.wrap_tensor(self._root_states)  
-        self.initial_root_states = self.root_states.clone()
 
         # 拆分位置与速度分量
         self.dof_pos = self.dof_states[:, 0].view(self.num_envs, -1, 1)
@@ -322,7 +327,6 @@ class Gym():
             raise ValueError(f"Unsupported control type: {self.control_type}. Must be one of ['effort', 'velocity', 'position'].")
         # Step the physics
         self.gym.simulate(self.sim)
-
         self.refresh()
     # Step rendering (skip when headless)
         self.render()
@@ -510,11 +514,11 @@ class Gym():
         return box_goal_pose
     
     def get_obj_position(self):
-        box_goal_pose = self.rb_states[self.box_idxs, :3]
+        box_goal_pose = self.root_states[self.root_box_idxs, :3]
         return box_goal_pose
     
     def get_obj_quaternion(self):
-        box_goal_quat = self.rb_states[self.box_idxs, 3:7]
+        box_goal_quat = self.root_states[self.root_box_idxs, 3:7]
         return box_goal_quat
     
     def get_finger_collision_info(self):
