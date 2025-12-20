@@ -145,9 +145,14 @@ class LinkerHand06(Robot):
     def check_finger_collision(self):
         collision_info = self.sim.get_finger_collision_info()
         collision = collision_info['collision_flags']
-        return {'collision_occurred': collision}
+        return {'finger_collision_occurred': collision}
     
     def check_body_collision(self):
         collision_info = self.sim.get_body_collision_info()
         collision = collision_info['collision_flags']
-        return {'collision_occurred': collision}
+        return {'body_collision_occurred': collision}
+    
+    def check_object_reset(self):
+        reset_info = self.sim.get_object_reset_info()
+        reset_flags = reset_info['reset_obj']
+        return {'obj_reset_occurred': reset_flags}

@@ -64,8 +64,8 @@ class RobotCfg:
         self.action_high = 1
 
 
-        self.stiffness_robot = 120
-        self.damping_robot = 22
+        self.stiffness_robot = 120 #60
+        self.damping_robot = 22 #8
 
         self.stiffness_hand = 40
         self.damping_hand = 10

@@ -551,19 +551,29 @@ class Gym():
             'collision_flags': collision
         }
     
-    def get_body_collision_info(self):
-        body_link3_pos_z = self.rb_states[self.body_link3_idxs, 2]
-        body_link4_pos_z = self.rb_states[self.body_link4_idxs, 2]
+    def get_body_collision_info(self):#修改为臂pos低于手pos
+        # body_link3_pos_z = self.rb_states[self.body_link3_idxs, 2]
+        # body_link4_pos_z = self.rb_states[self.body_link4_idxs, 2]
         body_link5_pos_z = self.rb_states[self.body_link5_idxs, 2]
         body_link6_pos_z = self.rb_states[self.body_link6_idxs, 2]
-        table_pos_z = 0.3  
-        collision_body3 = body_link3_pos_z < table_pos_z
-        collision_body4 = body_link4_pos_z < table_pos_z     
-        collision_body5 = body_link5_pos_z < table_pos_z
-        collision_body6 = body_link6_pos_z < table_pos_z
-        collision = collision_body3 | collision_body4 | collision_body5 | collision_body6
+        fingger_pos = self.get_fingers_mid_point()
+        fingger_pos_z = fingger_pos[:, 2]
+        # collision_body3 = body_link3_pos_z < fingger_pos_z
+        # collision_body4 = body_link4_pos_z < fingger_pos_z    
+        collision_body5 = body_link5_pos_z < fingger_pos_z
+        collision_body6 = body_link6_pos_z < fingger_pos_z
+        collision = collision_body5 | collision_body6
         return {
             'collision_flags': collision
+        }
+    
+    #物体重置条件
+    def get_object_reset_info(self):
+        box_pos_z = self.rb_states[self.box_idxs, 2]
+        table_pos_z = 0.3
+        reset_obj = box_pos_z < table_pos_z
+        return {
+            'reset_obj': reset_obj
         }
 
     def create_plane(self):

@@ -4,8 +4,8 @@ import argparse
 from typing import Optional, List
 
 # 先导入依赖 isaacgym 的配置与环境，再导入 torch 与 rsl_rl，避免导入顺序问题
-from configs.FrankaReach_config import FrankaReachCfg
-from env.TaskRobotEnv import FrankaReachFixedPointGym
+from configs.LinkerHandGrasp_config import LinkGraspCfg
+from env.TaskRobotEnv import LinkerHandGraspGym
 
 import torch
 from rsl_rl.runners import OnPolicyRunner
@@ -30,9 +30,9 @@ def _find_latest_checkpoint(log_dir: str) -> Optional[str]:
 
 def eval_policy(model_path: Optional[str] = None, episodes: int = 10, deterministic: bool = True):
 
-    cfg = FrankaReachCfg()
+    cfg = LinkGraspCfg()
     train_cfg = class_to_dict(rslCfgPPO())
-    env =FrankaReachFixedPointGym(cfg)
+    env = LinkerHandGraspGym(cfg)
     runner = OnPolicyRunner(env=env, train_cfg=train_cfg, log_dir=None, device=str(env.device))
 
     if model_path is None:

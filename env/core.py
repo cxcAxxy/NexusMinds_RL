@@ -245,10 +245,13 @@ class RobotTaskEnv():
         # collision_termination = collision_info['collision_occurred']
 
         finger_collision_info = self.robot.check_finger_collision()
-        finger_collision_termination = finger_collision_info['collision_occurred']
+        finger_collision_termination = finger_collision_info['finger_collision_occurred']
 
         body_collision_info = self.robot.check_body_collision()
-        body_collision_termination = body_collision_info['collision_occurred']
+        body_collision_termination = body_collision_info['body_collision_occurred']
+
+        object_reset_info = self.robot.check_object_reset()
+        object_reset_termination = object_reset_info['obj_reset_occurred']
 
         task_success = self.task.is_success()
 
@@ -257,7 +260,7 @@ class RobotTaskEnv():
 
         # 碰撞逻辑，后面修改
         # self.reset_buf = self.time_out_buf | collision_termination | task_success
-        self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination | body_collision_termination
+        self.reset_buf = self.time_out_buf |  task_success | finger_collision_termination | body_collision_termination | object_reset_termination
 
 
 
