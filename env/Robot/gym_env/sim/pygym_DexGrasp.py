@@ -26,7 +26,7 @@ class Gym():
         self.sim_params = gymapi.SimParams()
         self.sim_params.up_axis = gymapi.UP_AXIS_Z
         self.sim_params.gravity = gymapi.Vec3(0.0, 0.0, -9.8)
-        self.sim_params.dt = 1.0 / 60.0
+        self.sim_params.dt = 1.0 / 120.0
         self.sim_params.substeps = 2
         self.sim_params.use_gpu_pipeline = args.use_gpu_pipeline
         if args.physics_engine == gymapi.SIM_PHYSX:
@@ -291,12 +291,6 @@ class Gym():
         self.gym.prepare_sim(self.sim)
         self.get_state_tensors()
 
-        self.gym.simulate(self.sim)
-        self.gym.fetch_results(self.sim, True)
-        self.refresh()
-        self.initial_root_states = self.root_states.clone()
-
-
     def get_state_tensors(self):
 
         self._rb_states = self.gym.acquire_rigid_body_state_tensor(self.sim)
@@ -326,6 +320,8 @@ class Gym():
         self._massmatrix = self.gym.acquire_mass_matrix_tensor(self.sim, "franka")
         self.mm = gymtorch.wrap_tensor(self._massmatrix)
         self.refresh()
+        self.initial_root_states = self.root_states.clone()
+
 
     # 仿真步骤步进一次
     def step(self,u,control_type):

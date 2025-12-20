@@ -67,34 +67,22 @@ def eval_policy(model_path: Optional[str] = None, episodes: int = 10, determinis
                 actions = policy(obs)
             obs, _, _, _, _ = env.step(actions)
 
-            # 成功判定与距离统计
-            achieved = env.get_achieved_goal_obs()
-            desired = env.get_desired_goal_obs()
-            print("------检验-----")
-            print("Achieved Goals:\n", achieved)
-            print("Desired Goals:\n", desired)
-            print("-----------------")
-            dist = torch.norm(achieved - desired, dim=-1)
-            batch_min_dist = torch.minimum(batch_min_dist, dist)
-
-            step_success = env.task.is_success(achieved, desired)
-            batch_success |= step_success
-
+        
         # 汇总本批结果（可能超过所需的 episodes，截断即可）
-        remain = episodes - total_done
-        take = min(remain, num_envs)
-        successes.extend(batch_success[:take].bool().tolist())
-        min_dists.extend(batch_min_dist[:take].float().tolist())
-        total_done += take
+        # remain = episodes - total_done
+        # take = min(remain, num_envs)
+        # successes.extend(batch_success[:take].bool().tolist())
+        # min_dists.extend(batch_min_dist[:take].float().tolist())
+        # total_done += take
 
-    success_rate = sum(1 for s in successes if s) / len(successes)
-    avg_min_dist = sum(min_dists) / len(min_dists) if min_dists else float("nan")
+    # success_rate = sum(1 for s in successes if s) / len(successes)
+    # avg_min_dist = sum(min_dists) / len(min_dists) if min_dists else float("nan")
 
-    print("===== Evaluation =====")
-    print(f"Checkpoint: {model_path}")
-    print(f"Episodes:   {episodes}")
-    print(f"Success@{env.task.distance_threshold:.3f}m: {success_rate*100:.2f}%")
-    print(f"Avg min distance: {avg_min_dist:.4f} m (越小越好)")
+    # print("===== Evaluation =====")
+    # print(f"Checkpoint: {model_path}")
+    # print(f"Episodes:   {episodes}")
+    # print(f"Success@{env.task.distance_threshold:.3f}m: {success_rate*100:.2f}%")
+    # print(f"Avg min distance: {avg_min_dist:.4f} m (越小越好)")
 
 
 if __name__ == "__main__":
