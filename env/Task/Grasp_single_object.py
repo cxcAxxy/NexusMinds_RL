@@ -89,9 +89,9 @@ class Grasp_single_object(Task):
 
     def reward_pos_reach_distance(self):
 
-        fingers_mid = self.sim.get_fingers_mid_point()
+        hand_base_pos = self.sim.get_hand_base_pos()
 
-        d = torch.norm(fingers_mid - self.sim.get_obj_position(), dim=-1)
+        d = torch.norm(hand_base_pos - self.sim.get_obj_position(), dim=-1)
 
         reward_pos = torch.exp(-self.alpha_pos * d)
 

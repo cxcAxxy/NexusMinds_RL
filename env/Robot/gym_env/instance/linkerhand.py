@@ -35,6 +35,7 @@ class LinkerHand06(Robot):
             hand_displacement = action[:, 7:]
             body_displacement = body_displacement * 0.05  # 这里的系数需要考虑
             hand_displacement = hand_displacement * 0.05
+            hand_displacement[:, 9:16] = 0
 
             body_joint_pos = self.sim.get_joint_pos()[:, :7]
             body_joint_vel = self.sim.get_joint_vel()[:, :7]
@@ -75,7 +76,7 @@ class LinkerHand06(Robot):
         ee_velocity = self.sim.get_ee_velocity()
         ee_angular_velocity = self.sim.get_ee_angular_velocity()
         middle_point_to_object_distance = self.sim.get_hand_to_object_distance()
-        middle_point = self.sim.get_fingers_mid_point()
+        middle_point = self.sim.get_hand_base_pos()
         obj_pos = self.sim.get_obj_position()
         obj_quat = self.sim.get_obj_quaternion()
 

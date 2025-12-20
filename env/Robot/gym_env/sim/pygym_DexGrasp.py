@@ -125,7 +125,9 @@ class Gym():
         # set default DOF states
         self.default_dof_state = np.zeros(self.robot_num_dofs, gymapi.DofState.dtype)
         self.default_dof_state["pos"][:7] = self.robot_mids[:7]
-        self.default_dof_state["pos"][7:] = 0.0  #是否考虑手是否要显示表示其初始位置
+        self.default_dof_state["pos"][7:15] = 0
+        self.default_dof_state["pos"][15:16] = 1
+        self.default_dof_state["pos"][16:] = 0
         self.default_dof_pos = torch.tensor(self.default_dof_state["pos"],dtype=torch.float32,device=self.device)
         self.default_dof_pos = self.default_dof_pos.unsqueeze(0)
 
@@ -172,6 +174,8 @@ class Gym():
 
         self.ee_handles=[]
         self.ee_idxs=[]
+
+        self.hand_base_idxs=[]
 
         self.finger1_idxs=[]
         self.finger2_idxs=[]
@@ -229,6 +233,9 @@ class Gym():
             ee_pose = self.gym.get_rigid_transform(env, ee_handle)
             self.init_pos_list.append([ee_pose.p.x, ee_pose.p.y, ee_pose.p.z])
             self.init_orn_list.append([ee_pose.r.x, ee_pose.r.y, ee_pose.r.z, ee_pose.r.w])
+
+            hand_base_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "hand_base_link", gymapi.DOMAIN_SIM)
+            self.hand_base_idxs.append(hand_base_idx)
             
             #get finger pose
             finger1_idx = self.gym.find_actor_rigid_body_index(env, robot_handle, "thumb_distal", gymapi.DOMAIN_SIM)
@@ -321,6 +328,7 @@ class Gym():
         self.mm = gymtorch.wrap_tensor(self._massmatrix)
         self.refresh()
         self.initial_root_states = self.root_states.clone()
+        self.initial_dof_states = self.dof_states.clone()
 
 
     # 仿真步骤步进一次
@@ -406,14 +414,15 @@ class Gym():
         force_magnitudes = torch.norm(ee_collision_forces, dim=1)
         return {'force_magnitudes':force_magnitudes}
     
-    def get_fingers_mid_point(self):
-        finger1_pos = self.rb_states[self.finger1_idxs, :3]
-        finger2_pos = self.rb_states[self.finger2_idxs, :3]
-        finger3_pos = self.rb_states[self.finger3_idxs, :3]
-        finger4_pos = self.rb_states[self.finger4_idxs, :3]
-        finger5_pos = self.rb_states[self.finger5_idxs, :3]
-        center_pos = (finger1_pos + finger2_pos + finger3_pos + finger4_pos + finger5_pos) / 5.0
-        return center_pos
+    def get_hand_base_pos(self):
+        # finger1_pos = self.rb_states[self.finger1_idxs, :3]
+        # finger2_pos = self.rb_states[self.finger2_idxs, :3]
+        # finger3_pos = self.rb_states[self.finger3_idxs, :3]
+        # finger4_pos = self.rb_states[self.finger4_idxs, :3]
+        # finger5_pos = self.rb_states[self.finger5_idxs, :3]
+        # center_pos = (finger1_pos + finger2_pos + finger3_pos + finger4_pos + finger5_pos) / 5.0
+        hand_base_pos = self.rb_states[self.hand_base_idxs, :3]
+        return hand_base_pos
     
     def get_two_fingers_mid_point(self):
         finger1_pos = self.rb_states[self.finger1_idxs, :3]
@@ -450,9 +459,9 @@ class Gym():
         return width
 
     def get_hand_to_object_distance(self):
-        middle_point = self.get_fingers_mid_point()
+        hand_base_pos = self.get_hand_base_pos()
         box_goal_pos = self.get_obj_position()
-        distance = middle_point - box_goal_pos
+        distance = hand_base_pos - box_goal_pos
         return distance
 
     # ✅ 获取单个关节角
@@ -552,7 +561,7 @@ class Gym():
         # body_link4_pos_z = self.rb_states[self.body_link4_idxs, 2]
         body_link5_pos_z = self.rb_states[self.body_link5_idxs, 2]
         body_link6_pos_z = self.rb_states[self.body_link6_idxs, 2]
-        fingger_pos = self.get_fingers_mid_point()
+        fingger_pos = self.get_hand_base_pos()
         fingger_pos_z = fingger_pos[:, 2]
         # collision_body3 = body_link3_pos_z < fingger_pos_z
         # collision_body4 = body_link4_pos_z < fingger_pos_z    
@@ -592,15 +601,13 @@ class Gym():
         # Isaac Gym 的 DOF 状态张量按环境连续存储
         dofs_per_env = self.robot_num_dofs
         # 目标位姿/速度
-        target_pos = torch.as_tensor(self.robot_mids, device=self.dof_states.device, dtype=self.dof_states.dtype)
-        target_vel = torch.zeros_like(target_pos)
 
         for env_idx in env_ids.tolist():
             start = env_idx * dofs_per_env
             end = start + dofs_per_env
             # pos -> [:,0], vel -> [:,1]
-            self.dof_states[start:end, 0] = target_pos
-            self.dof_states[start:end, 1] = target_vel
+            self.dof_states[start:end, 0] = self.initial_dof_states[start:end, 0]
+            self.dof_states[start:end, 1] = self.initial_dof_states[start:end, 1]
 
         # 重新更新状态
         self.dof_pos = self.dof_states[:, 0].view(self.num_envs, -1, 1)
@@ -645,6 +652,8 @@ class Gym():
     
     def get_dof_names(self):
         dof_names = self.gym.get_asset_dof_names(self.robot_asset)
+        for i, name in enumerate(self.dof_names):
+            print(i, name)
         return dof_names
     
     def render(self, sync_frame_time=True):

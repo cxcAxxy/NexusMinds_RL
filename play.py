@@ -67,23 +67,6 @@ def eval_policy(model_path: Optional[str] = None, episodes: int = 10, determinis
                 actions = policy(obs)
             obs, _, _, _, _ = env.step(actions)
 
-        
-        # 汇总本批结果（可能超过所需的 episodes，截断即可）
-        # remain = episodes - total_done
-        # take = min(remain, num_envs)
-        # successes.extend(batch_success[:take].bool().tolist())
-        # min_dists.extend(batch_min_dist[:take].float().tolist())
-        # total_done += take
-
-    # success_rate = sum(1 for s in successes if s) / len(successes)
-    # avg_min_dist = sum(min_dists) / len(min_dists) if min_dists else float("nan")
-
-    # print("===== Evaluation =====")
-    # print(f"Checkpoint: {model_path}")
-    # print(f"Episodes:   {episodes}")
-    # print(f"Success@{env.task.distance_threshold:.3f}m: {success_rate*100:.2f}%")
-    # print(f"Avg min distance: {avg_min_dist:.4f} m (越小越好)")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Play/evaluate trained policy for Franka Reach")
