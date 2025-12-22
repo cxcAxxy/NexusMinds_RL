@@ -695,3 +695,29 @@ class Gym():
         reset_events['obj_reset'] = obj_info['reset_obj']
 
         return reset_events
+
+    def get_rigid_body_x_axis_world(self):
+        """
+        获取任意刚体的 -x轴在世界坐标系中的方向
+
+        Args:
+            body_indices: list[int] 或 torch.Tensor，刚体在 rb_states 中的 index
+
+        Returns:
+            -x_axis_world: (N, 3)
+        """
+
+        self.refresh()
+
+        quat = self.rb_states[self.hand_base_idxs, 3:7]
+        quat = quat / torch.norm(quat, dim=1, keepdim=True)
+
+        # 掌心法向量-x轴？？？
+        x_local = torch.tensor(
+            [-1.0, 0.0, 0.0],
+            device=quat.device
+        ).expand(quat.shape[0], 3)
+
+        x_world = quat_rotate(quat, x_local)
+
+        return x_world
