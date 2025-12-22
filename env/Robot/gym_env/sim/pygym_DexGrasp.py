@@ -618,6 +618,7 @@ class Gym():
         self.gym.set_dof_state_tensor(self.sim, gymtorch.unwrap_tensor(self.dof_states))
         # 刷新张量视图
         self.refresh()
+        print("111111", self.get_rigid_body_x_axis_world()[0])
 
     def reset_object_states(self, env_ids):
         # if env_ids is None or len(env_ids) == 0:
@@ -698,7 +699,7 @@ class Gym():
 
     def get_rigid_body_x_axis_world(self):
         """
-        获取任意刚体的 -x轴在世界坐标系中的方向
+        获取任意刚体的 x轴在世界坐标系中的方向
 
         Args:
             body_indices: list[int] 或 torch.Tensor，刚体在 rb_states 中的 index
@@ -712,9 +713,9 @@ class Gym():
         quat = self.rb_states[self.hand_base_idxs, 3:7]
         quat = quat / torch.norm(quat, dim=1, keepdim=True)
 
-        # 掌心法向量-x轴？？？
+        # 掌心法向量x轴
         x_local = torch.tensor(
-            [-1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
             device=quat.device
         ).expand(quat.shape[0], 3)
 

@@ -8,7 +8,7 @@ args = gymutil.parse_arguments(
         {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
         {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
         {"name": "--logdir", "type": str, "default": "logs", "help": "Directory for logging"},
-        {"name": "--num_envs", "type":int, "default": 20, "help": "the number of environments to train"},
+        {"name": "--num_envs", "type":int, "default":4096 , "help": "the number of environments to train"},
     ]   
 )
 
@@ -134,11 +134,11 @@ class TaskCfg:
         self.c7 = 1
         self.c8 = 1
         self.c9 = 1
-        self.c10 = 1
+        self.c10 = 2
 
-        self.alpha_mid =0.5
-        self.alpha_pos =0.5
-        self.alpha_down = 0.5
+        self.alpha_mid =1.5
+        self.alpha_pos =1.5
+        self.alpha_down = 1.5
 
         # 改为字典的方式：
         self.reward_scales = {
