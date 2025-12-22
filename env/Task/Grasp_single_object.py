@@ -125,4 +125,4 @@ class Grasp_single_object(Task):
         reset_events = self.sim.check_reset_events()
         obj_reset = reset_events['obj_reset'].float()
 
-        return -self.obj_reset
+        return -self.obj_reset * obj_reset
