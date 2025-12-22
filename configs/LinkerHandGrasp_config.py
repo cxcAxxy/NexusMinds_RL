@@ -131,6 +131,9 @@ class TaskCfg:
         self.c4 = 1
         self.c5 = 2
         self.c6 = 2
+        self.c7 = 1
+        self.c8 = 1
+        self.c9 = 1
 
         self.alpha_mid =0.5
         self.alpha_pos =0.5
@@ -140,6 +143,9 @@ class TaskCfg:
             "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
             "grasp_mid_point" : self.c1 * self.c4 * self.c6,
             "pos_reach_distance" : self.c2 ,
+            "finger_collision_reset" : self.c7,
+            "body_collision_reset" : self.c8,
+            "obj_reset" : self.c9
         }
 
 

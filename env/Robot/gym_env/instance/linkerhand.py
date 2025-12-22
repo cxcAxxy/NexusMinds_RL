@@ -42,6 +42,7 @@ class LinkerHand06(Robot):
 
             hand_joint_pos = self.sim.get_joint_pos()[:, 7:]
             hand_joint_vel = self.sim.get_joint_vel()[:, 7:]
+            hand_joint_vel[:, 9:16] = 0
 
             body_kp = self.kp[:7]
             body_kv = self.kv[:7]
@@ -138,22 +139,22 @@ class LinkerHand06(Robot):
         target_arm_angles = current_arm_joint_angles + arm_joint_ctrl
         return target_arm_angles
 
-    def check_hand_collision(self, force_threshold=0.01):
-        collision_info = self.sim.get_ee_collision_info()
-        collision = collision_info['force_magnitudes'] > force_threshold
-        return {'collision_occurred': collision}
+    # def check_hand_collision(self, force_threshold=0.01):
+    #     collision_info = self.sim.get_ee_collision_info()
+    #     collision = collision_info['force_magnitudes'] > force_threshold
+    #     return {'collision_occurred': collision}
     
-    def check_finger_collision(self):
-        collision_info = self.sim.get_finger_collision_info()
-        collision = collision_info['collision_flags']
-        return {'finger_collision_occurred': collision}
+    # def check_finger_collision(self):
+    #     collision_info = self.sim.get_finger_collision_info()
+    #     collision = collision_info['collision_flags']
+    #     return {'finger_collision_occurred': collision}
     
-    def check_body_collision(self):
-        collision_info = self.sim.get_body_collision_info()
-        collision = collision_info['collision_flags']
-        return {'body_collision_occurred': collision}
+    # def check_body_collision(self):
+    #     collision_info = self.sim.get_body_collision_info()
+    #     collision = collision_info['collision_flags']
+    #     return {'body_collision_occurred': collision}
     
-    def check_object_reset(self):
-        reset_info = self.sim.get_object_reset_info()
-        reset_flags = reset_info['reset_obj']
-        return {'obj_reset_occurred': reset_flags}
+    # def check_object_reset(self):
+    #     reset_info = self.sim.get_object_reset_info()
+    #     reset_flags = reset_info['reset_obj']
+    #     return {'obj_reset_occurred': reset_flags}

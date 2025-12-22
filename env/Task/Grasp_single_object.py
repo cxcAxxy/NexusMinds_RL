@@ -14,18 +14,14 @@ class Grasp_single_object(Task):
         self.num_envs = cfg.num_envs
 
         # 参数
-        self.alpha_mid =cfg.alpha_mid
-        self.alpha_pos= cfg.alpha_pos
-        self.c1=cfg.c1
-        self.c2=cfg.c2
-        self.c3=cfg.c3
-        self.c4=cfg.c4
-        self.c5 = cfg.c5
-        self.c6 = cfg.c6
-
+        self.alpha_mid = cfg.alpha_mid
+        self.alpha_pos = cfg.alpha_pos
         self.grasp_goal_distance = cfg.reward_scales["grasp_goal_distance"]
         self.grasp_mid_point = cfg.reward_scales["grasp_mid_point"]
         self.pos_reach_distance = cfg.reward_scales["pos_reach_distance"]
+        self.finger_collision_reset = cfg.reward_scales["finger_collision_reset"]
+        self.body_collision_reset = cfg.reward_scales["body_collision_reset"]
+        self.obj_reset = cfg.reward_scales["obj_reset"]
 
         # 初始化目标缓存 (num_envs, 3)
         self.goal = torch.zeros((self.num_envs, 3), dtype=torch.float32, device=self.device)
@@ -96,3 +92,21 @@ class Grasp_single_object(Task):
         reward_pos = torch.exp(-self.alpha_pos * d)
 
         return self.pos_reach_distance * reward_pos
+    
+    def reward_finger_collision_reset(self):
+        reset_events = self.sim.check_reset_events()
+        finger_reset = reset_events['finger_collision'].float()
+        
+        return -self.finger_collision_reset * finger_reset
+    
+    def reward_body_collision_reset(self):
+        reset_events = self.sim.check_reset_events()
+        body_reset = reset_events['body_collision'].float()
+
+        return -self.body_collision_reset * body_reset
+    
+    def reward_obj_reset(self):
+        reset_events = self.sim.check_reset_events()
+        obj_reset = reset_events['obj_reset'].float()
+
+        return -self.obj_reset * obj_reset

@@ -100,7 +100,7 @@ class Gym():
         self.table_asset = self.gym.create_box(self.sim, table_dims.x, table_dims.y, table_dims.z, asset_options)
 
     def create_box_asset(self):
-        box_size = 0.03
+        box_size = 0.05
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = False
         self.box_asset = self.gym.create_box(self.sim, box_size, box_size, box_size, asset_options)
@@ -524,7 +524,7 @@ class Gym():
 
     def generate_random_box_goal_pose(self):
         box_goal_pose = gymapi.Transform()
-        x = random.uniform(0.3, 0.7)
+        x = random.uniform(0.5, 0.7)
         y = random.uniform(-0.1, 0.1)
         z = 0.325
         box_goal_pose.p = gymapi.Vec3(x, y, z)
@@ -681,3 +681,17 @@ class Gym():
                     self.gym.sync_frame_time(self.sim)
             else:
                 self.gym.poll_viewer_events(self.viewer)
+
+    def check_reset_events(self):
+        reset_events = {}
+
+        finger_info = self.get_finger_collision_info()
+        reset_events['finger_collision'] = finger_info['collision_flags']
+
+        body_info = self.get_body_collision_info()
+        reset_events['body_collision'] = body_info['collision_flags']
+
+        obj_info = self.get_object_reset_info()
+        reset_events['obj_reset'] = obj_info['reset_obj']
+
+        return reset_events
