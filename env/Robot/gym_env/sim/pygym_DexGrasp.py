@@ -81,6 +81,7 @@ class Gym():
         asset_options.flip_visual_attachments = True
         asset_options.armature = 0.01
         asset_options.disable_gravity = True
+        asset_options.thickness = 0.001
         print("Loading asset '%s' from '%s'" % (urdf_file, asset_root))
         self.robot_asset = self.gym.load_asset(self.sim, asset_root, urdf_file, asset_options)
         self.dof_names = self.gym.get_asset_dof_names(self.robot_asset)
@@ -103,6 +104,7 @@ class Gym():
         box_size = 0.05
         asset_options = gymapi.AssetOptions()
         asset_options.fix_base_link = False
+        asset_options.thickness = 0.001
         self.box_asset = self.gym.create_box(self.sim, box_size, box_size, box_size, asset_options)
         shape_props = self.gym.get_asset_rigid_shape_properties(self.box_asset)
         for sp in shape_props:
@@ -618,8 +620,8 @@ class Gym():
         self.gym.set_dof_state_tensor(self.sim, gymtorch.unwrap_tensor(self.dof_states))
         # 刷新张量视图
         self.refresh()
-        print("111111", self.get_rigid_body_x_axis_world()[0])
-
+        
+        
     def reset_object_states(self, env_ids):
         # if env_ids is None or len(env_ids) == 0:
         #     return
@@ -722,3 +724,12 @@ class Gym():
         x_world = quat_rotate(quat, x_local)
 
         return x_world
+    
+
+    def get_finger_z_distance(self):
+        finger1_pos_z = self.rb_states[self.finger1_idxs, 2]
+        finger2_pos_z = self.rb_states[self.finger2_idxs, 2]
+        distance = abs(finger1_pos_z - finger2_pos_z)
+
+        return distance
+

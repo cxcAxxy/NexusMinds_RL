@@ -5,10 +5,10 @@ args = gymutil.parse_arguments(
     description="test Gym Simulation",
     custom_parameters=[
         {"name": "--use_gpu", "type": bool, "default": True, "help": "Use GPU for physics"},
-        {"name": "--use_gpu_pipeline", "type": bool, "default": True, "help": "Use GPU pipeline"},
+        {"name": "--use_gpu_pipeline", "type": bool, "default": False, "help": "Use GPU pipeline"},
         {"name": "--headless", "type": bool, "default": False, "help": "Run simulation without viewer"},
         {"name": "--logdir", "type": str, "default": "logs", "help": "Directory for logging"},
-        {"name": "--num_envs", "type":int, "default":4096 , "help": "the number of environments to train"},
+        {"name": "--num_envs", "type":int, "default":20 , "help": "the number of environments to train"},
     ]   
 )
 
@@ -51,7 +51,7 @@ class RobotCfg:
         self.control_type_sim = "effort"
 
         # 模型路径与姿态
-        self.asset = "/home/ymy/space_rl/NexusMInds_RL/env/assets"
+        self.asset = "/home/gu/NexusMInds_RL/env/assets"
         self.robot_files = "urdf/frankaLinkerHand_description/robots/frankaLinker.urdf"
         # 每个机器人的初始位置是一样的吗
         self.base_pose = [0, 0, 0]  # 每个环境的机器人位置
@@ -64,8 +64,8 @@ class RobotCfg:
         self.action_high = 1
 
         #120 22
-        self.stiffness_robot = 80 #60
-        self.damping_robot = 8 #8
+        self.stiffness_robot = 120 #60
+        self.damping_robot = 22 #8
         #40 10
         self.stiffness_hand = 30
         self.damping_hand = 10
@@ -130,25 +130,28 @@ class TaskCfg:
         self.c3 = 1
         self.c4 = 1
         self.c5 = 2
-        self.c6 = 2
+        self.c6 = 3
         self.c7 = 1
         self.c8 = 1
         self.c9 = 1
         self.c10 = 2
+        self.c11 = 5
 
         self.alpha_mid =1.5
         self.alpha_pos =1.5
         self.alpha_down = 1.5
+        self.alpha_z = 6
 
         # 改为字典的方式：
         self.reward_scales = {
             "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
             "grasp_mid_point" : self.c1 * self.c4 * self.c6,
-            "pos_reach_distance" : self.c2 ,
+            # "pos_reach_distance" : self.c2 ,
             "finger_collision_reset": self.c7,
             "body_collision_reset": self.c8,
             "obj_reset": self.c9,
             "hand_down": self.c10,
+            "finger_z_distance": self.c11
         }
 
 

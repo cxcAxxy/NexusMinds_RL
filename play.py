@@ -36,7 +36,7 @@ def eval_policy(model_path: Optional[str] = None, episodes: int = 10, determinis
     runner = OnPolicyRunner(env=env, train_cfg=train_cfg, log_dir=None, device=str(env.device))
 
     if model_path is None:
-        model_path = _find_latest_checkpoint(log_dir="logs")
+        model_path = _find_latest_checkpoint(log_dir="logs/logs_c2_3_c5_10_c6_3_c7_10_c8_10_c9_10_c10_5_alpga_2_num_8192_itera_50000")
         if model_path is None:
             raise FileNotFoundError("未找到 checkpoint，请先训练或通过 --model 指定路径")
     if not os.path.isfile(model_path):

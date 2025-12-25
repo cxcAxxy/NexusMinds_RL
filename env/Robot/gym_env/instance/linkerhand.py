@@ -52,7 +52,7 @@ class LinkerHand06(Robot):
 
             distance = self.sim.get_hand_to_object_distance()
             distance = torch.norm(distance, dim=-1)
-            mask = distance > 0.1
+            mask = distance > 0.2
 
             u1 = self.sim.body_joint_to_torque(body_displacement, body_joint_pos, body_joint_vel, body_kp , body_kv)
             #加判断条件
