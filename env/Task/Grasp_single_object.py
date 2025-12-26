@@ -101,7 +101,7 @@ class Grasp_single_object(Task):
         x_hand = self.sim.get_rigid_body_x_axis_world()
 
         world_down = torch.tensor(
-            [0.0, 0.0, -1.0],
+            [0.0, 0.0, 1.0],
             device=x_hand.device
         ).expand_as(x_hand)
 
@@ -109,11 +109,13 @@ class Grasp_single_object(Task):
 
         # 按照区间
         # 0.86 按照姿态调整
-        if cos_sim > 0 and cos_sim < 0.86:
-            reward = 0
-        else:
-            reward = torch.exp(-self.alpha_down * (1.0 + cos_sim))
+        # if cos_sim > 0 and cos_sim < 0.86:
+        #     reward = 0
+        # else:
 
+        cos_sim = torch.clamp(cos_sim, 0.0, 1.0)
+
+        reward = torch.exp(-self.alpha_down * (1.0 - cos_sim))
         return -self.hand_down * reward
 
     def reward_finger_collision_reset(self):
@@ -136,7 +138,7 @@ class Grasp_single_object(Task):
     
     def reward_finger_z_distance(self):
         distance = self.sim.get_finger_z_distance()
-        distance = torch.norm(distance, dim=-1)
+        # distance = torch.norm(distance, dim=-1)
         distance = 0.064-distance
 
         return self.finger_z_distance * distance
