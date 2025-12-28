@@ -20,12 +20,12 @@ class Grasp_single_object(Task):
         self.alpha_z = cfg.alpha_z
         self.grasp_goal_distance = cfg.reward_scales["grasp_goal_distance"]
         self.grasp_mid_point = cfg.reward_scales["grasp_mid_point"]
-        # self.pos_reach_distance = cfg.reward_scales["pos_reach_distance"]
+        self.pos_reach_distance = cfg.reward_scales["pos_reach_distance"]
         self.finger_collision_reset = cfg.reward_scales["finger_collision_reset"]
         self.body_collision_reset = cfg.reward_scales["body_collision_reset"]
         self.obj_reset = cfg.reward_scales["obj_reset"]
         self.hand_down = cfg.reward_scales["hand_down"]
-        self.finger_z_distance = cfg.reward_scales["finger_z_distance"]
+        # self.finger_z_distance = cfg.reward_scales["finger_z_distance"]
 
         # 初始化目标缓存 (num_envs, 3)
         self.goal = torch.zeros((self.num_envs, 3), dtype=torch.float32, device=self.device)
@@ -87,15 +87,15 @@ class Grasp_single_object(Task):
 
         return self.grasp_mid_point * r_neg
 
-    # def reward_pos_reach_distance(self):
+    def reward_pos_reach_distance(self):
 
-    #     hand_base_pos = self.sim.get_hand_base_pos()
+        hand_base_pos = self.sim.get_hand_base_pos()
 
-    #     d = torch.norm(hand_base_pos - self.sim.get_obj_position(), dim=-1)
+        d = torch.norm(hand_base_pos - self.sim.get_obj_position(), dim=-1)
 
-    #     reward_pos = torch.exp(-self.alpha_pos * d)
+        reward_pos = torch.exp(-self.alpha_pos * d)
 
-    #     return self.pos_reach_distance * reward_pos
+        return self.pos_reach_distance * reward_pos
 
     def reward_hand_down(self):
         x_hand = self.sim.get_rigid_body_x_axis_world()
@@ -136,9 +136,9 @@ class Grasp_single_object(Task):
 
         return -self.obj_reset * obj_reset
     
-    def reward_finger_z_distance(self):
-        distance = self.sim.get_finger_z_distance()
-        # distance = torch.norm(distance, dim=-1)
-        distance = 0.064-distance
+    # def reward_finger_z_distance(self):
+    #     distance = self.sim.get_finger_z_distance()
+    #     # distance = torch.norm(distance, dim=-1)
+    #     distance = 0.064-distance
 
-        return self.finger_z_distance * distance
+    #     return self.finger_z_distance * distance

@@ -146,12 +146,12 @@ class TaskCfg:
         self.reward_scales = {
             "grasp_goal_distance" : self.c1 * self.c4 * self.c5,
             "grasp_mid_point" : self.c1 * self.c4 * self.c6,
-            # "pos_reach_distance" : self.c2 ,
+            "pos_reach_distance" : self.c2 ,
             "finger_collision_reset": self.c7,
             "body_collision_reset": self.c8,
             "obj_reset": self.c9,
             "hand_down": self.c10,
-            "finger_z_distance": self.c11
+            # "finger_z_distance": self.c11
         }
 
 
