@@ -35,20 +35,19 @@ class LinkerHand06(Robot):
             hand_displacement = action[:, 7:]
             body_displacement = body_displacement * 0.05  # 这里的系数需要考虑
             hand_displacement = hand_displacement * 0.05
-            hand_displacement[:, 9:16] = 0
 
             body_joint_pos = self.sim.get_joint_pos()[:, :7]
             body_joint_vel = self.sim.get_joint_vel()[:, :7]
 
             hand_joint_pos = self.sim.get_joint_pos()[:, 7:]
             hand_joint_vel = self.sim.get_joint_vel()[:, 7:]
-            hand_joint_vel[:, 9:16] = 0
 
             body_kp = self.kp[:7]
             body_kv = self.kv[:7]
 
             hand_kp = self.kp[7:]
             hand_kv = self.kv[7:]
+
 
             distance = self.sim.get_hand_to_object_distance()
             distance = torch.norm(distance, dim=-1)

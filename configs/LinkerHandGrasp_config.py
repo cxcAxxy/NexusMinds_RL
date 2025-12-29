@@ -78,17 +78,17 @@ class RobotCfg:
             "panda_joint5": self.stiffness_robot, 
             "panda_joint6": self.stiffness_robot,
             "panda_joint7": self.stiffness_robot,
-            "thumb_cmc_yaw" : self.stiffness_hand,
-            "thumb_cmc_pitch" : self.stiffness_hand,
-            "thumb_ip" : self.stiffness_hand,
             "index_mcp_pitch" : self.stiffness_hand,
             "index_dip" : self.stiffness_hand,
-            "middle_mcp_pitch" : self.stiffness_hand,
-            "middle_dip" : self.stiffness_hand,
-            "ring_mcp_pitch" : self.stiffness_hand,
-            "ring_dip" : self.stiffness_hand,
-            "pinky_mcp_pitch" : self.stiffness_hand,
-            "pinky_dip" : self.stiffness_hand
+            "middle_mcp_pitch" : 0,
+            "middle_dip" : 0,
+            "pinky_mcp_pitch" : 0,
+            "pinky_dip" : 0,
+            "ring_mcp_pitch" : 0,
+            "ring_dip" : 0,
+            "thumb_cmc_yaw" : 0,
+            "thumb_cmc_pitch" : self.stiffness_hand,
+            "thumb_ip" : self.stiffness_hand
         }
 
         self.damping = {
@@ -99,17 +99,17 @@ class RobotCfg:
             "panda_joint5": self.damping_robot,
             "panda_joint6": self.damping_robot,
             "panda_joint7": self.damping_robot,
-            "thumb_cmc_yaw" : self.damping_hand,
-            "thumb_cmc_pitch" : self.damping_hand,
-            "thumb_ip" : self.damping_hand,
             "index_mcp_pitch" : self.damping_hand,
             "index_dip" : self.damping_hand,
-            "middle_mcp_pitch" : self.damping_hand,
-            "middle_dip" : self.damping_hand,
-            "ring_mcp_pitch" : self.damping_hand,
-            "ring_dip" : self.damping_hand,
-            "pinky_mcp_pitch" : self.damping_hand,
-            "pinky_dip" : self.damping_hand
+            "middle_mcp_pitch" : 0,
+            "middle_dip" : 0,
+            "pinky_mcp_pitch" : 0,
+            "pinky_dip" : 0,
+            "ring_mcp_pitch" : 0,
+            "ring_dip" : 0,
+            "thumb_cmc_yaw" : 0,
+            "thumb_cmc_pitch" : self.damping_hand,
+            "thumb_ip" : self.damping_hand
         }
 
 
