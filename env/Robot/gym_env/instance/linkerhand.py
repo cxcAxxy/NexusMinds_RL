@@ -25,15 +25,15 @@ class LinkerHand06(Robot):
                 self.kv[i] = self.cfg.damping[dof_name]
 
         # 准备资产，创建环境，为后续的控制做好准备
-        self.sim.pre_simulate(cfg.num_envs, cfg.asset, cfg.robot_files, cfg.base_pose, cfg.base_orn)
+        self.sim.pre_simulate(cfg.num_envs, cfg.asset, cfg.robot_files, cfg.base_pose, cfg.base_orn, cfg.control_type)
 
     def step(self, action) -> None:
         action = action.clone()  # ensure action don't change
         action = torch.clamp(action, self.cfg.action_low, self.cfg.action_high)
-        if self.cfg.control_type == "ee":
+        if self.cfg.control_type == "effort":
             body_displacement = action[:, :7]
             hand_displacement = action[:, 7:]
-            body_displacement = body_displacement * 0.05  # 这里的系数需要考虑
+            body_displacement = body_displacement * 0.05  
             hand_displacement = hand_displacement * 0.05
 
             body_joint_pos = self.sim.get_joint_pos()[:, :7]
@@ -54,8 +54,6 @@ class LinkerHand06(Robot):
             mask = distance > 0.2
 
             u1 = self.sim.body_joint_to_torque(body_displacement, body_joint_pos, body_joint_vel, body_kp , body_kv)
-            #加判断条件
-            
             u2 = self.sim.hand_joint_to_torque(hand_displacement, hand_joint_pos, hand_joint_vel, hand_kp, hand_kv)
             u2[mask] = 0
 
@@ -64,6 +62,22 @@ class LinkerHand06(Robot):
             return u
             # for i in  range(self.cfg.control_decimation):
             #     self.sim.step(u,self.cfg.control_type_sim)
+
+        elif self.cfg.control_type == "position":
+            body_displacement = action[:, :7]
+            hand_displacement = action[:, 7:]
+            body_displacement = body_displacement * 0.05  
+            hand_displacement = hand_displacement * 0.05
+
+            body_joint_pos = self.sim.get_joint_pos()[:, :7]
+            hand_joint_pos = self.sim.get_joint_pos()[:, 7:]
+
+            u1 = self.sim.body_joint_to_pos(body_displacement, body_joint_pos)
+            u2 = self.sim.hand_joint_to_pos(hand_displacement, hand_joint_pos)
+
+            u = torch.cat([u1, u2], dim=1)
+
+            return u
 
         else:
             raise Exception("需要更新其他的控制方式")

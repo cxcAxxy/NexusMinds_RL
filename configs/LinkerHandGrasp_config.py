@@ -42,13 +42,13 @@ class RobotCfg:
 
     def __init__(self,global_cfg):
         # 控制相关参数
-        self.control_type = "ee"
+        self.control_type = "position"
         self.block_gripper = True
         self.num_actions = 18
         self.num_obs = 51
         self.robot_num_dofs = 18
         self.num_envs = global_cfg.num_envs  # 修改其他配置一致
-        self.control_type_sim = "effort"
+        self.control_type_sim = "position"
 
         # 模型路径与姿态
         self.asset = "/home/gu/NexusMInds_RL/env/assets"
@@ -129,7 +129,7 @@ class TaskCfg:
         self.c2 = 3
         self.c3 = 1
         self.c4 = 1
-        self.c5 = 2
+        self.c5 = 10
         self.c6 = 3
         self.c7 = 1
         self.c8 = 1
@@ -166,7 +166,7 @@ class AllCfg:
         self.max_episode_length = 800
         self.max_episode_length_s = 4.0  # 秒数形式（用于日志统计）
         self.decimation = 4
-        self.control_type_sim = "effort"
+        self.control_type_sim = "position"
 
 
 class LinkGraspCfg:

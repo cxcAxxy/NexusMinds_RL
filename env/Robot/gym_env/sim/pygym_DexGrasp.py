@@ -122,7 +122,7 @@ class Gym():
 
 
     #后面接入参数，设置pd参数等等
-    def set_dof_states_and_propeties(self):
+    def set_dof_states_and_propeties(self, control_type):
 
         # set default DOF states
         self.default_dof_state = np.zeros(self.robot_num_dofs, gymapi.DofState.dtype)
@@ -148,9 +148,18 @@ class Gym():
             dtype=torch.float32
         )
         self.torque_limits = self.torque_limits.unsqueeze(0) 
-        
 
-        self.robot_dof_props["driveMode"][:].fill(gymapi.DOF_MODE_EFFORT)
+        
+        if control_type == "effort" :
+            self.robot_dof_props["driveMode"][:].fill(gymapi.DOF_MODE_EFFORT)
+        elif control_type == "position" :
+            self.robot_dof_props["driveMode"][:7].fill(gymapi.DOF_MODE_POS)
+            self.robot_dof_props["stiffness"][:7].fill(400) #参数需要修改
+            self.robot_dof_props["damping"][:7].fill(40)
+
+            self.robot_dof_props["driveMode"][7:].fill(gymapi.DOF_MODE_POS)
+            self.robot_dof_props["stiffness"][7:].fill(50)
+            self.robot_dof_props["damping"][7:].fill(5)
 
 
 
@@ -276,7 +285,7 @@ class Gym():
         middle_env = self.envs[self.num_envs // 2 + self.num_per_row // 2]
         self.gym.viewer_camera_look_at(self.viewer, middle_env, cam_pos, cam_target)
 
-    def pre_simulate(self,num_envs,asset_root,asset_file,base_pos,base_orn):
+    def pre_simulate(self,num_envs,asset_root,asset_file,base_pos,base_orn,control_type):
         self.create_plane()
         self.create_robot_asset(asset_file,asset_root)
         self.create_table_asset()
@@ -285,14 +294,14 @@ class Gym():
 
         # get joint limits and ranges for Franka
         self.robot_dof_props = self.gym.get_asset_dof_properties(self.robot_asset)
-        robot_lower_limits = self.robot_dof_props['lower']
-        robot_upper_limits = self.robot_dof_props['upper']
-        robot_ranges = robot_upper_limits - robot_lower_limits
+        self.robot_lower_limits = self.robot_dof_props['lower']
+        self.robot_upper_limits = self.robot_dof_props['upper']
+        robot_ranges = self.robot_upper_limits - self.robot_lower_limits
         # 设置一下robot_mids,可能是用来初始化的作用，这个地方稍微记忆一下.
-        self.robot_mids = 0.5 * (robot_upper_limits + robot_lower_limits)
+        self.robot_mids = 0.5 * (self.robot_upper_limits + self.robot_lower_limits)
         self.robot_num_dofs = len(self.robot_dof_props)
 
-        self.set_dof_states_and_propeties()
+        self.set_dof_states_and_propeties(control_type)
         # 创建环境和设置实例
         self.create_envs_and_actors(num_envs,base_pos,base_orn)
 
@@ -401,10 +410,36 @@ class Gym():
         u = torch.clamp(u, -self.torque_limits[:,7:], self.torque_limits[:,7:])
         return u
     
-    def joint_to_torque(self, displacement, joint_pos, joint_vel, kp, kv):
-        u = kp*(displacement + self.default_dof_pos - joint_pos) - kv*joint_vel
-        #u = torch.clamp(u, -self.torque_limits, self.torque_limits)
+    def body_joint_to_pos(self, body_displacement, body_joint_pos):
+        u = body_joint_pos + body_displacement
+        lower = torch.as_tensor(
+            self.robot_lower_limits[:7],
+            device=u.device,
+            dtype=u.dtype
+        )
+        upper = torch.as_tensor(
+            self.robot_upper_limits[:7],
+            device=u.device,
+            dtype=u.dtype
+        )
+        u = torch.clamp(u, lower, upper)
         return u
+    
+    def hand_joint_to_pos(self, hand_displacement, hand_joint_pos):
+        u = hand_joint_pos + hand_displacement
+        lower = torch.as_tensor(
+            self.robot_lower_limits[7:],
+            device=u.device,
+            dtype=u.dtype
+        )
+        upper = torch.as_tensor(
+            self.robot_upper_limits[7:],
+            device=u.device,
+            dtype=u.dtype
+        )
+        u = torch.clamp(u, lower, upper)
+        return u
+
     
     def get_collision_forces(self):
         return self.contact_forces
